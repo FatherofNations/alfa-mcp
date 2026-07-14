@@ -30,7 +30,8 @@ export async function processAssetsDir(
     (opts.rounded ?? []).map((r) => [r.file.replace(/\.\w+$/, ""), r.radius])
   );
   if (!fs.existsSync(dir)) return [`✗ нет директории ${dir}`];
-  const files = fs.readdirSync(dir).filter((f) => !f.startsWith("_"));
+  // скрытые и служебные файлы (в т.ч. macOS AppleDouble ._* из tar) не трогаем
+  const files = fs.readdirSync(dir).filter((f) => !f.startsWith("_") && !f.startsWith("."));
   if (!(await getSharp())) report.push("⚠ sharp недоступен — PNG-обработка пропущена");
 
   for (const file of files.sort()) {
@@ -48,6 +49,8 @@ export async function processAssetsDir(
     }
 
     if (ext === ".png") {
+      // битый/не-png файл не должен валить всю пачку — ошибка пофайлово
+      try {
       let buf: Buffer = fs.readFileSync(p);
       const analysis = await analyzePng(buf);
       if (analysis?.empty) {
@@ -86,6 +89,9 @@ export async function processAssetsDir(
       report.push(
         `${applied.length ? "✓" : "•"} ${file}${analysis ? ` (${analysis.width}×${analysis.height})` : ""}${applied.length ? ` — ${applied.join("; ")}` : ""}`
       );
+      } catch (e) {
+        report.push(`✗ ${file}: не обработан (${e instanceof Error ? e.message : e}) — файл оставлен как есть`);
+      }
       continue;
     }
 

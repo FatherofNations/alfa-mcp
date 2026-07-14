@@ -52,7 +52,7 @@ export function registerAssets(server: McpServer, ctx: ServerCtx) {
         return ok([
           "# process_assets (командный режим): выполни в корне проекта",
           "```bash",
-          `tar czf /tmp/pf-assets.tgz -C ${d} . \\`,
+          `COPYFILE_DISABLE=1 tar czf /tmp/pf-assets.tgz -C ${d} . \\`,
           `  && curl -fsS -X POST --data-binary @/tmp/pf-assets.tgz -H "Content-Type: application/gzip" \\`,
           `       "${url}" -o /tmp/pf-assets-out.tgz \\`,
           `  && rm -rf ${d} && mkdir -p ${d} && tar xzf /tmp/pf-assets-out.tgz -C ${d} \\`,
