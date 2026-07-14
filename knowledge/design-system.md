@@ -10,8 +10,9 @@
 - **Styrene UI** — bold (700) — акцентные кнопки/плашки (ближайший
   доступный аналог Styrene A LC).
 
-Тул `install_fonts` качает woff2 с raw.githubusercontent, кладёт в
-`public/fonts/` и генерирует `styles/fonts.css`.
+Шрифты ставятся автоматически при `scaffold_project` (woff2 с
+raw.githubusercontent → `public/fonts/` + `styles/fonts.css` + preload).
+Тул `install_fonts` — для до-установки весов/семейств в существующий проект.
 
 ### Подключение — @font-face, НЕ next/font/local
 
@@ -85,5 +86,5 @@ Letter-spacing в макетах Альфы задан per-размер (`--ls-1
 
 ## Лицензия
 
-Шрифты не вшиваются в пакет proto-forge — `install_fonts` качает их из
-публичного репозитория core-ds в момент скаффолда. Прототипы — внутренние.
+Шрифты не вшиваются в пакет proto-forge — качаются из публичного
+репозитория core-ds в момент скаффолда. Прототипы — внутренние.

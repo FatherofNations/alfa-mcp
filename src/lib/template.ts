@@ -8,7 +8,6 @@ import path from "node:path";
 
 export type Features = {
   toolsPanel: boolean;
-  neuroBar: boolean;
   deepLinks: boolean;
   mobileGate: boolean;
 };

@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 // на имена семейств литералом, поэтому next/font/local не подходит, он
 // хеширует имя). Preload убирает FOUT. crossOrigin обязателен: шрифты
 // грузятся в CORS-режиме даже same-origin.
-// Список заполняет install_fonts (см. proto://knowledge/design-system).
+// Список заполняется при скаффолде (см. proto://knowledge/design-system).
 const FONTS: string[] = [
   /* proto-forge:fonts */
 ];

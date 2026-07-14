@@ -14,26 +14,25 @@
     robots.ts             # noindex: прототипы не индексируем
     icon.svg              # фавикон-плейсхолдер
   components/
-    tools/
+    tools/                # (опция toolsPanel — ТОЛЬКО по явной просьбе)
       ToolsProvider.tsx   # контекст прототипа: dashboard, panelOpen, swapTo,
                           # deep-links, body-классы
       ToolsPanel.tsx      # панель: карточки дашбордов, секции параметров
-    neuro/                # (опция neuroBar) умная строка + чат
     BodyClass.tsx         # класс на <body> на время жизни роута
   lib/
-    dashboards.ts         # РЕЕСТР дашбордов (правится register_dashboard)
+    dashboards.ts         # (при toolsPanel) РЕЕСТР дашбордов для панели
     usePageBehavior.ts    # заготовка хука поведения страницы
   styles/
     tokens.css            # CSS-переменные из Figma (extract_tokens)
-    fonts.css             # @font-face (install_fonts)
+    fonts.css             # @font-face (ставится при скаффолде)
     canon.css             # анимационный канон utility-классами
-    tools.css             # панель, .board/.board-body, рамка, диссолв
+    tools.css             # (при toolsPanel) панель, .board, рамка, диссолв
     mobile-gate.css       # заглушка <1024px
     app.css               # стили страниц проекта (сюда верстается макет)
   data/                   # демо-данные ОТДЕЛЬНО от вёрстки
   public/
-    assets/figma/         # ассеты из Figma (import_figma_assets)
-    fonts/                # woff2 (install_fonts)
+    assets/figma/         # ассеты: download_assets (Figma MCP) → process_assets
+    fonts/                # woff2 (ставятся при скаффолде)
   scripts/
     extract.py            # экстрактор byte-perfect партиалов (путь миграции)
     verify.mjs            # parity-QA: роуты, битые img, консоль
@@ -57,11 +56,15 @@
 - Импорты CSS — только в `app/layout.tsx`, порядок: tokens → fonts →
   canon → app → tools → mobile-gate.
 
-## Роли файлов панели
+## Роли файлов панели (если панель включена)
+
+Панель tools скаффолдится **только по явной просьбе пользователя**
+(`features.toolsPanel: true`). Без неё layout рендерит `<main>{children}</main>`,
+роуты дашбордов доступны по URL напрямую.
 
 - `ToolsProvider` живёт в **root layout** → переживает смену роута.
   Держит состояние прототипа и body-классы. Свои состояния прототипа
-  (варианты, тогглы) добавлять сюда.
+  (варианты, тогглы — вместо заглушек «Параметр 1/2») добавлять сюда.
 - `ToolsPanel` — только разметка панели. Динамическая часть ремаунтится
   по `key` → стаггер-проявление по канону.
 - `lib/dashboards.ts` — единственный источник списка дашбордов: роуты,

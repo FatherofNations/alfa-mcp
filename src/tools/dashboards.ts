@@ -4,6 +4,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { TEMPLATE_DIR, resolveInProject } from "../lib/paths.js";
 import { Report, fail } from "../lib/report.js";
+import { ServerCtx } from "../lib/ctx.js";
 import {
   applyFeatureMarkers,
   applyPlaceholders,
@@ -12,84 +13,115 @@ import {
 } from "../lib/template.js";
 
 /* register_dashboard — новый дашборд в существующий проект: роут,
-   компонент-заготовка, карточка в панели (через реестр lib/dashboards.ts).
-   swapTo и deep-links подхватывают запись из реестра автоматически. */
+   компонент-заготовка; при включённой панели tools — карточка в реестре
+   lib/dashboards.ts (свопы и deep-links подхватываются сами). */
 
-export function registerDashboards(server: McpServer) {
+function renderFiles(nameArg: string, route: string, hasToolsPanel: boolean) {
+  const slug = route.slice(1);
+  const comp = componentName(slug);
+  const feats = { toolsPanel: hasToolsPanel, deepLinks: true, mobileGate: true };
+  const vars = { DASH_TITLE: nameArg, DASH_COMPONENT: comp, DASH_ID: slug };
+  const page = applyPlaceholders(
+    fs.readFileSync(path.join(TEMPLATE_DIR, "app/__dash__/page.tsx"), "utf8"),
+    vars
+  );
+  const dash = applyPlaceholders(
+    applyFeatureMarkers(
+      fs.readFileSync(path.join(TEMPLATE_DIR, "components/dashboards/__Dash__.tsx"), "utf8"),
+      feats
+    ),
+    vars
+  );
+  return { slug, comp, page, dash };
+}
+
+export function registerDashboards(server: McpServer, ctx: ServerCtx) {
   server.registerTool(
     "register_dashboard",
     {
       title: "Новый дашборд в проект",
       description:
-        "Создаёт app/<route>/page.tsx + компонент-заготовку и добавляет карточку " +
-        "в панель tools (реестр lib/dashboards.ts). Свопы и deep-links подключаются сами.",
+        "Создаёт app/<route>/page.tsx + компонент-заготовку; если в проекте есть " +
+        "панель tools — добавляет карточку в реестр (свопы/deep-links сами).",
       inputSchema: {
-        name: z.string().min(1).describe("имя дашборда (id/имя компонента строится из него)"),
+        name: z.string().min(1).describe("имя дашборда (заголовок страницы/карточки)"),
         route: z
           .string()
-          .regex(/^\/[a-z0-9-]*$/, "роут вида /reports (латиница/цифры/дефис)")
+          .regex(/^\/[a-z0-9-]+$/, "роут вида /reports (латиница/цифры/дефис)")
           .describe("путь роута, например /reports"),
-        cardTitle: z.string().min(1).describe("заголовок карточки в панели"),
+        cardTitle: z.string().optional().describe("заголовок карточки в панели (default = name)"),
         cardSubtitle: z.string().default("Прототип").describe("подзаголовок карточки"),
         targetDir: z.string().default(".").describe("корень проекта-прототипа"),
       },
     },
     async ({ name, route, cardTitle, cardSubtitle, targetDir }) => {
+      const title = cardTitle ?? name;
+      const entry = `  { id: "${route.slice(1)}", route: "${route}", title: "${title}", subtitle: "${cardSubtitle}" },`;
+
+      if (ctx.mode === "http") {
+        // файлов агента не видим — отдаём контент файлов и точную правку
+        const { slug, comp, page, dash } = renderFiles(name, route, true);
+        const r = new Report();
+        r.add(`# register_dashboard «${name}» → ${route} (командный режим)`);
+        r.add("");
+        r.add(`1. Запиши в app/${slug}/page.tsx:`);
+        r.add("```tsx");
+        r.add(page);
+        r.add("```");
+        r.add(`2. Запиши в components/dashboards/${comp}.tsx:`);
+        r.add("```tsx");
+        r.add(dash);
+        r.add("```");
+        r.add("3. Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД строкой-маркером `/* proto-forge:dashboards */`:");
+        r.add("```ts");
+        r.add(entry);
+        r.add("```");
+        return r.toResult();
+      }
+
       const root = resolveInProject(targetDir ?? ".");
-      const regPath = path.join(root, "lib/dashboards.ts");
-      if (!fs.existsSync(regPath)) {
-        return fail(`нет ${regPath} — проект не из шаблона proto-forge (сначала scaffold_project)`);
+      const pagePath = path.join(root, `app/${route.slice(1)}/page.tsx`);
+      if (!fs.existsSync(path.join(root, "app"))) {
+        return fail(`нет ${root}/app — проект не из шаблона proto-forge (сначала scaffold_project)`);
       }
-      if (route === "/") return fail("роут / занят первым дашбордом — выбери /<slug>");
-      const reg = fs.readFileSync(regPath, "utf8");
-      if (!reg.includes("/* proto-forge:dashboards */")) {
-        return fail("в lib/dashboards.ts нет маркера proto-forge:dashboards — добавь запись вручную");
-      }
-      const slug = route.slice(1);
-      const id = slug;
-      if (new RegExp(`route:\\s*"${route}"`).test(reg)) {
-        return fail(`роут ${route} уже зарегистрирован`);
-      }
-      const pagePath = path.join(root, `app/${slug}/page.tsx`);
       if (fs.existsSync(pagePath)) return fail(`${pagePath} уже существует`);
 
+      const regPath = path.join(root, "lib/dashboards.ts");
+      const hasPanel = fs.existsSync(regPath);
+      const { slug, comp, page, dash } = renderFiles(name, route, hasPanel);
       const r = new Report();
-      const comp = componentName(slug);
-      // фичи проекта уже применены при скаффолде: neuroBar есть, если есть его файлы
-      const feats = {
-        toolsPanel: true,
-        deepLinks: true,
-        mobileGate: true,
-        neuroBar: fs.existsSync(path.join(root, "components/neuro/NeuroBar.tsx")),
-      };
-      const vars = { DASH_TITLE: name, DASH_COMPONENT: comp, DASH_ID: id };
 
-      const pageTpl = fs.readFileSync(path.join(TEMPLATE_DIR, "app/__dash__/page.tsx"), "utf8");
-      writeFileEnsured(pagePath, applyPlaceholders(pageTpl, vars));
+      writeFileEnsured(pagePath, page);
       r.add(`✓ app/${slug}/page.tsx (роут ${route})`);
 
       const compPath = path.join(root, `components/dashboards/${comp}.tsx`);
       if (!fs.existsSync(compPath)) {
-        const dashTpl = applyFeatureMarkers(
-          fs.readFileSync(path.join(TEMPLATE_DIR, "components/dashboards/__Dash__.tsx"), "utf8"),
-          feats
-        );
-        writeFileEnsured(compPath, applyPlaceholders(dashTpl, vars));
+        writeFileEnsured(compPath, dash);
         r.add(`✓ components/dashboards/${comp}.tsx (заготовка)`);
       } else {
         r.add(`• components/dashboards/${comp}.tsx уже есть — не трогаю`);
       }
 
-      const entry = `  { id: "${id}", route: "${route}", title: "${cardTitle}", subtitle: "${cardSubtitle}" },`;
-      fs.writeFileSync(
-        regPath,
-        reg.replace("  /* proto-forge:dashboards */", `${entry}\n  /* proto-forge:dashboards */`),
-        "utf8"
-      );
-      r.add(`✓ lib/dashboards.ts: карточка «${cardTitle}» добавлена`);
+      if (hasPanel) {
+        const reg = fs.readFileSync(regPath, "utf8");
+        if (new RegExp(`route:\\s*"${route}"`).test(reg)) {
+          r.add(`• роут ${route} уже в реестре — не дублирую`);
+        } else if (reg.includes("/* proto-forge:dashboards */")) {
+          fs.writeFileSync(
+            regPath,
+            reg.replace("  /* proto-forge:dashboards */", `${entry}\n  /* proto-forge:dashboards */`),
+            "utf8"
+          );
+          r.add(`✓ lib/dashboards.ts: карточка «${title}» добавлена (своп/префетч — сами)`);
+        } else {
+          r.add("⚠ в lib/dashboards.ts нет маркера proto-forge:dashboards — добавь запись вручную:");
+          r.add(entry);
+        }
+      } else {
+        r.add("• панели tools в проекте нет — реестр не трогаю (роут доступен по URL)");
+      }
       r.add("");
-      r.add("Своп из панели и префетч роута работают из реестра автоматически.");
-      r.add(`Дальше: вёрстка по макету в components/dashboards/${comp}.tsx (сначала figma-import + pixel-perfect).`);
+      r.add(`Дальше: вёрстка по макету в components/dashboards/${comp}.tsx (figma-import + pixel-perfect).`);
       return r.toResult();
     }
   );

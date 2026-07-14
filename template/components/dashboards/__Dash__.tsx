@@ -2,9 +2,6 @@
 import { memo } from "react";
 import { demoStats } from "@/data/demo";
 import { usePageBehavior } from "@/lib/usePageBehavior";
-/* proto:if neuroBar */
-import NeuroBar from "@/components/neuro/NeuroBar";
-/* proto:endif */
 
 /* Дашборд «__DASH_TITLE__» — заготовка. Сюда верстается макет:
    - статичную разметку переносить byte-perfect (proto://knowledge/pixel-perfect);
@@ -30,10 +27,6 @@ function __DASH_COMPONENT__Inner() {
           ))}
         </div>
       </div>
-      {/* proto:if neuroBar */}
-      {/* оверлей: сиблинг контента, вне transform-предков */}
-      <NeuroBar />
-      {/* proto:endif */}
     </main>
   );
 }

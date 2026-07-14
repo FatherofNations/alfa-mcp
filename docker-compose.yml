@@ -1,0 +1,17 @@
+services:
+  proto-forge:
+    build: .
+    container_name: proto-forge
+    restart: unless-stopped
+    ports:
+      - "8811:8811"
+    environment:
+      - PROTO_HTTP_PORT=8811
+      # Bearer-токен для /mcp (пусто = без аутентификации).
+      # Задаётся в .env рядом с этим файлом: PROTO_AUTH_TOKEN=...
+      - PROTO_AUTH_TOKEN=${PROTO_AUTH_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8811/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

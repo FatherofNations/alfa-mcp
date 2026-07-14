@@ -4,6 +4,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { resolveInProject } from "../lib/paths.js";
 import { Report, fail } from "../lib/report.js";
+import { ServerCtx } from "../lib/ctx.js";
 import { writeFileEnsured } from "../lib/template.js";
 
 /* extract_tokens — styles/tokens.css из выдачи get_variable_defs (Figma MCP).
@@ -57,7 +58,7 @@ function flatten(defs: unknown, prefix = ""): [string, string][] {
   return out;
 }
 
-export function registerTokens(server: McpServer) {
+export function registerTokens(server: McpServer, ctx: ServerCtx) {
   server.registerTool(
     "extract_tokens",
     {
@@ -102,6 +103,18 @@ ${lines.join("\n")}
     'Segoe UI', Roboto, sans-serif;
 }
 `;
+      if (ctx.mode === "http") {
+        // файлов агента не видим — отдаём готовый контент
+        r.add(`# extract_tokens: ${seen.size} переменных — запиши в styles/tokens.css${append ? " (допиши в конец)" : ""}`);
+        r.add("```css");
+        r.add(body);
+        r.add("```");
+        if (dupes.length) {
+          r.add(`⚠ конфликтующие имена (взято последнее значение): ${[...new Set(dupes)].join(", ")}`);
+        }
+        return r.toResult();
+      }
+
       const cssPath = path.join(root, "styles/tokens.css");
       if (append && fs.existsSync(cssPath)) {
         fs.appendFileSync(cssPath, `\n${body}`, "utf8");

@@ -2,60 +2,53 @@
 
 MCP-сервер для скоростной разработки интерактивных прототипов по
 Figma-макетам. Конденсат опыта реальных проектов (пиксель-перфект
-дашборды Альфа-Бизнеса): база знаний, скаффолд проекта, пайплайн ассетов,
-канон анимаций, чек-листы.
+дашборды Альфа-Бизнеса): база знаний, скаффолд проекта, быстрый пайплайн
+ассетов, канон анимаций, чек-листы.
 
-Работает **в паре** с официальным Figma MCP: данные макета — оттуда,
-экспертиза и автоматизация — отсюда. proto-forge не проксирует Figma MCP
-(кроме batch-экспорта ассетов через Figma REST), не трогает git и не
-деплоит — это решения агента/человека.
+Работает **в паре** с официальным Figma MCP: данные и ассеты макета —
+оттуда (`get_design_context` / `get_variable_defs` / `download_assets`),
+обработка и экспертиза — отсюда. **Figma-токены не нужны.** proto-forge
+не трогает git и не деплоит — это решения агента/человека.
 
-## Подключение
+## Подключение (Claude Code)
+
+Командный сервер уже развёрнут — подключение одной командой:
+
+```bash
+claude mcp add --transport http proto-forge http://45.139.77.60:8811/mcp \
+  --header "Authorization: Bearer <токен>"
+```
+
+Альтернатива — локально по stdio (файловые тулы тогда пишут напрямую
+в проект):
 
 ```bash
 git clone https://github.com/FatherofNations/proto-forge.git
 cd proto-forge && npm install && npm run build
+claude mcp add proto-forge -- node /path/to/proto-forge/dist/server.js
 ```
-
-Claude Code (`.mcp.json` проекта или `claude mcp add`):
-
-```json
-{
-  "mcpServers": {
-    "proto-forge": {
-      "command": "node",
-      "args": ["/path/to/proto-forge/dist/server.js"],
-      "env": { "FIGMA_TOKEN": "figd_… (опционально, для import_figma_assets)" }
-    }
-  }
-}
-```
-
-Cursor/Windsurf — аналогично (stdio). `FIGMA_TOKEN` нужен только тулу
-`import_figma_assets` (Figma REST); остальное работает без токенов.
-`PROTO_TEMPLATE_DIR` — переопределение пути к шаблону (форк под другую
-дизайн-систему).
 
 ## Что внутри
 
 ### Resources — база знаний (`proto://knowledge/*`)
 
-Оглавление: `proto://knowledge/index`. Документы: figma-import,
-pixel-perfect, **animation-canon** (12 рецептов с выверенными кривыми),
-react-patterns, project-structure, tools-panel, deep-links, deploy-vercel,
-verification, design-system. Агент читает нужный гайд ПЕРЕД задачей.
+Оглавление: `proto://knowledge/index`. Документы: figma-import (включая
+«Быстрый пайплайн ассетов»), pixel-perfect, **animation-canon** (12
+рецептов с выверенными кривыми), react-patterns, project-structure,
+tools-panel, deep-links, deploy-vercel, verification, design-system.
+Агент читает нужный гайд ПЕРЕД задачей.
 
 ### Tools
 
 | Тул | Что делает |
 |---|---|
-| `scaffold_project` | новый проект из шаблона: Next.js 15, панель tools, канон-анимации, deep-links, verify, CI |
-| `import_figma_assets` | batch-экспорт через Figma REST: проверка пустых экспортов, flood-fill чистка фонов, rounded-маски, lossless WebP |
-| `sanitize_svg` | чистка SVG: `var(--fill-0,…)` → цвет, фоновые path, предупреждения для CSS-масок |
-| `install_fonts` | woff2 из core-ds → `public/fonts` + `styles/fonts.css` + preload в layout |
+| `scaffold_project` | новый проект: Next.js 15, канон-анимации, шрифты core-ds сразу, verify, CI. Достаточно `name`. Панель tools — только по явной просьбе |
+| `process_assets` | пост-процессинг ВСЕЙ папки ассетов после `download_assets` (Figma MCP): SVG-санитайзер, детект пустых экспортов, flood-fill чистка фонов, lossless WebP |
+| `sanitize_svg` | точечная чистка SVG (для папки — process_assets) |
 | `extract_tokens` | выдача `get_variable_defs` → `styles/tokens.css` (kebab-case переменные) |
 | `add_animation` | канон-рецепт под конкретный селектор (9 рецептов) |
-| `register_dashboard` | новый дашборд: роут + заготовка + карточка в панели |
+| `register_dashboard` | новый дашборд: роут + заготовка (+ карточка панели, если панель есть) |
+| `install_fonts` | до-установка шрифтов (скаффолд ставит их сам) |
 | `get_checklist` | чек-лист стадии: import / layout / animation / qa / deploy |
 
 ### Prompts
@@ -65,38 +58,45 @@ verification, design-system. Агент читает нужный гайд ПЕ�
 
 ### Шаблон (`template/`)
 
-Обобщённый стартер прототипа: панель tools с рамкой-обрезкой и свопом
-дашбордов через диссолв, `canon.css` (весь канон utility-классами),
-deep-links, mobile-gate, опциональный neuro-модуль (умная строка + чат),
-`scripts/verify.mjs` (parity-QA), `scripts/extract.py` (byte-perfect
-партиалы), CI, `vercel.json`.
+Стартер прототипа: канон-анимации (`canon.css` utility-классами),
+mobile-gate, `scripts/verify.mjs` (parity-QA), `scripts/extract.py`
+(byte-perfect партиалы), CI, `vercel.json`. Опционально (по явной
+просьбе): панель tools с рамкой-обрезкой, свопом дашбордов через диссолв
+и deep-links; свитчи в свежей панели — заглушки «Параметр 1/2».
 
 ## Типовой цикл
 
 ```
-scaffold_project → install_fonts → get_variable_defs → extract_tokens
+scaffold_project (шрифты уже внутри) → get_variable_defs → extract_tokens
 → (чтение figma-import + pixel-perfect) → разбор фрейма по под-узлам
-→ import_figma_assets → вёрстка → add_animation → npm run verify
-→ get_checklist(qa) → деплой по deploy-vercel.md
+→ ОДИН батч download_assets → process_assets → вёрстка → add_animation
+→ npm run verify → get_checklist(qa) → деплой по deploy-vercel.md
 ```
+
+## Хостинг (HTTP-режим)
+
+```bash
+docker compose up -d --build     # порт 8811, PROTO_AUTH_TOKEN в .env
+```
+
+Эндпоинты: `POST /mcp` (Streamable HTTP, stateless), `GET /dl/…`
+(тарбол скаффолда, TTL 30 мин), `POST /process…` (round-trip обработка
+ассетов), `GET /healthz`. В HTTP-режиме файловые тулы отдают готовые
+curl-команды/контент — агент применяет их локально одной операцией.
 
 ## Разработка
 
 ```bash
 npm install
-npm run build     # tsc → dist/
-npm test          # build + smoke-тест (JSON-RPC по stdio, 40 проверок)
-npm run dev       # tsx src/server.ts
+npm test          # build + smoke stdio (JSON-RPC) + smoke http
+npm run dev       # tsx src/server.ts (stdio)
+PROTO_HTTP_PORT=8811 npm run dev   # http-режим локально
 ```
-
-Структура: `src/server.ts` (stdio), `src/tools/*` (по файлу на тул),
-`knowledge/*.md` (resources), `template/` (шаблон, версионируется вместе
-с сервером).
 
 ## Роадмап
 
-- v2: Streamable HTTP + auth для командного хостинга; версионирование
-  базы знаний; библиотека готовых блоков (сайдбар-стек, лента операций)
-  как параметризуемые генераторы.
+- Версионирование базы знаний (знания пополняются с каждого проекта).
+- Библиотека готовых блоков (сайдбар-стек, лента операций) как
+  параметризуемые генераторы.
 
 Полная спецификация: `docs/mcp-spec.md` в проекте nefor-dash.

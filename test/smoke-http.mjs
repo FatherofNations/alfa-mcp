@@ -1,0 +1,150 @@
+#!/usr/bin/env node
+/* Smoke-тест HTTP-режима: Streamable HTTP (stateless) + /dl + /process.
+   Запуск: node test/smoke-http.mjs (после npm run build). */
+
+import { spawn, execFileSync } from "node:child_process";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+const PORT = 8899;
+const TOKEN = "smoke-test-token";
+const BASE = `http://127.0.0.1:${PORT}`;
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "proto-forge-http-"));
+
+const server = spawn("node", [path.resolve("dist/server.js"), "--http", String(PORT)], {
+  env: { ...process.env, PROTO_AUTH_TOKEN: TOKEN },
+  stdio: ["ignore", "inherit", "inherit"],
+});
+
+let failures = 0;
+function check(name, cond, extra = "") {
+  if (cond) console.log(`  ✓ ${name}`);
+  else {
+    failures++;
+    console.error(`  ✗ ${name}${extra ? ` — ${extra}` : ""}`);
+  }
+}
+
+async function rpc(method, params = {}, id = 1) {
+  const res = await fetch(`${BASE}/mcp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+      Authorization: `Bearer ${TOKEN}`,
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
+  });
+  if (!res.ok) throw new Error(`${method}: HTTP ${res.status} ${await res.text()}`);
+  const json = await res.json();
+  if (json.error) throw new Error(`${method}: ${JSON.stringify(json.error)}`);
+  return json.result;
+}
+const text = (r) => r.content?.map((c) => c.text).join("\n") ?? "";
+
+try {
+  // ждём старт
+  for (let i = 0; i < 50; i++) {
+    try {
+      const r = await fetch(`${BASE}/healthz`);
+      if (r.ok) break;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const health = await fetch(`${BASE}/healthz`);
+  check("healthz", health.ok);
+
+  // auth: без токена — 401
+  const noAuth = await fetch(`${BASE}/mcp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} }),
+  });
+  check("auth: 401 без токена", noAuth.status === 401);
+
+  // initialize + tools/list (stateless: каждый запрос самодостаточен)
+  const init = await rpc("initialize", {
+    protocolVersion: "2025-06-18",
+    capabilities: {},
+    clientInfo: { name: "smoke-http", version: "0" },
+  });
+  check("initialize", init.serverInfo?.name === "proto-forge");
+  const tools = await rpc("tools/list", {}, 2);
+  check("tools/list = 8", tools.tools.length === 8, `получено ${tools.tools.length}`);
+
+  // ── scaffold → тарбол через /dl ──
+  const scaffold = await rpc(
+    "tools/call",
+    {
+      name: "scaffold_project",
+      arguments: { name: "http-proto", features: { toolsPanel: true }, installFonts: false },
+    },
+    3
+  );
+  const sOut = text(scaffold);
+  const dlUrl = sOut.match(/curl -fsS -o http-proto\.tgz "([^"]+)"/)?.[1];
+  check("scaffold: выдал /dl-ссылку", Boolean(dlUrl), sOut.slice(0, 300));
+  if (dlUrl) {
+    const tgz = await fetch(dlUrl);
+    check("тарбол скачивается", tgz.ok);
+    const tgzPath = path.join(tmp, "p.tgz");
+    fs.writeFileSync(tgzPath, Buffer.from(await tgz.arrayBuffer()));
+    execFileSync("tar", ["xzf", tgzPath, "-C", tmp]);
+    check(
+      "тарбол: проект с панелью",
+      fs.existsSync(path.join(tmp, "http-proto/components/tools/ToolsPanel.tsx")) &&
+        fs.existsSync(path.join(tmp, "http-proto/app/page.tsx"))
+    );
+    const gone = await fetch(dlUrl.replace(/dl\/[0-9a-f-]+/, `dl/${crypto.randomUUID()}`));
+    check("чужой id → 404", gone.status === 404);
+  }
+
+  // ── process round-trip ──
+  const assets = path.join(tmp, "assets");
+  fs.mkdirSync(assets);
+  fs.writeFileSync(
+    path.join(assets, "icon.svg"),
+    '<svg viewBox="0 0 24 24"><path fill="var(--fill-0, #EF3124)" d="M4 4h16"/></svg>'
+  );
+  const inTgz = path.join(tmp, "in.tgz");
+  execFileSync("tar", ["-C", assets, "-czf", inTgz, "."]);
+  const suffix = "-" + crypto.createHash("sha256").update(TOKEN).digest("hex").slice(0, 16);
+  const procRes = await fetch(`${BASE}/process${suffix}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/gzip" },
+    body: fs.readFileSync(inTgz),
+  });
+  check("process: 200", procRes.ok, String(procRes.status));
+  const outTgz = path.join(tmp, "out.tgz");
+  fs.writeFileSync(outTgz, Buffer.from(await procRes.arrayBuffer()));
+  const outDir = path.join(tmp, "out");
+  fs.mkdirSync(outDir);
+  execFileSync("tar", ["xzf", outTgz, "-C", outDir]);
+  check("process: svg почищен", fs.readFileSync(path.join(outDir, "icon.svg"), "utf8").includes('fill="#EF3124"'));
+  check("process: _report.txt внутри", fs.existsSync(path.join(outDir, "_report.txt")));
+  const badProc = await fetch(`${BASE}/process`, { method: "POST", body: "x" });
+  check("process без суффикса → 404", badProc.status === 404);
+
+  // ── extract_tokens: отдаёт контент, не пишет файлы ──
+  const tok = await rpc(
+    "tools/call",
+    { name: "extract_tokens", arguments: { variableDefs: { "text/primary": "#111" } } },
+    4
+  );
+  check("extract_tokens (http): контент css", text(tok).includes("--text-primary: #111;") && text(tok).includes("запиши"));
+
+  // ── process_assets тул в http-режиме отдаёт curl-команду ──
+  const pa = await rpc("tools/call", { name: "process_assets", arguments: {} }, 5);
+  check("process_assets (http): curl-команда", text(pa).includes("curl -fsS -X POST") && text(pa).includes("/process"));
+} catch (e) {
+  failures++;
+  console.error(`✗ ${e.message}`);
+} finally {
+  server.kill();
+  fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+console.log(failures ? `\nFAIL (http): ${failures}` : "\nOK: http smoke-тест пройден");
+process.exit(failures ? 1 : 0);

@@ -17,12 +17,13 @@ import ToolsPanel from "./ToolsPanel";
    (из pathname), состояния прототипа, открытость панели, своп-диссолв.
    См. proto://knowledge/tools-panel. */
 
-/* Состояния прототипа: ПРИМЕР. Замените поля под свой макет (варианты
+/* Состояния прототипа: ЗАГЛУШКИ. Замените поля под свой макет (варианты
    меню, тогглы стека и т.п.) — панель и deep-links уже подключены. */
 export interface ProtoState {
-  demo: boolean;
+  param1: boolean;
+  param2: boolean;
 }
-const DEFAULT_STATE: ProtoState = { demo: false };
+const DEFAULT_STATE: ProtoState = { param1: false, param2: false };
 const STATE_KEYS = Object.keys(DEFAULT_STATE) as (keyof ProtoState)[];
 
 interface ToolsCtx {

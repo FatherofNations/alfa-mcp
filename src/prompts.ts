@@ -26,10 +26,10 @@ export function registerPrompts(server: McpServer) {
       p(`Сверстай новый дашборд «${name}» по Figma-фрейму ${nodeId} (файл ${fileKey}).
 
 Порядок (не пропускать шаги):
-1. Прочитай proto://knowledge/figma-import и proto://knowledge/pixel-perfect.
+1. Прочитай proto://knowledge/figma-import (особенно «Быстрый пайплайн ассетов») и proto://knowledge/pixel-perfect.
 2. get_metadata по фрейму ${nodeId} → список под-узлов; get_design_context ПО КАЖДОМУ крупному под-узлу (лимит ~25k токенов). get_screenshot фрейма — сохранить как эталон.
 3. get_variable_defs → extract_tokens (если токены ещё не выгружены).
-4. Собери список ассетов (иконки svg, картинки png) с node-id → import_figma_assets одним batch-ом.
+4. За ОДИН проход собери список всех ассетов (иконки svg, картинки png) с node-id и camelCase-именами → ОДИН батч download_assets (Figma MCP) в public/assets/figma → сразу process_assets на папку.
 5. Если проект ещё не создан — scaffold_project; иначе register_dashboard (name="${name}").
 6. Вёрстка строго по design context (не по скриншоту), данные — в data/*. Анимации — только add_animation / канон.
 7. Бленд-дифф с эталоном; npm run verify; get_checklist(stage:"qa") — пройди все пункты.
@@ -52,7 +52,7 @@ export function registerPrompts(server: McpServer) {
 
 1. Прочитай proto://knowledge/figma-import (грабли под-узлов и инстансов).
 2. get_design_context по узлу ${nodeId} (при обрезке — по под-узлам); get_screenshot узла — эталон.
-3. Ассеты узла → import_figma_assets (svg — санитайзер отработает автоматически).
+3. Ассеты узла: ОДИН батч download_assets (Figma MCP) → сразу process_assets на папку.
 4. Вёрстка в сетке пейна ${pane}; появление виджета — в общий стаггер пейна (не отдельная анимация).
 5. Дифф: SVG-экспорт узла + бленд (точечная сверка, pixel-perfect.md).
 6. get_checklist(stage:"layout") перед сдачей.`)
