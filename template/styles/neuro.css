@@ -1,0 +1,110 @@
+/* ═══ neuro.css — умная строка и фуллскрин-чат ═══
+   Моушен — канон: width-морф cubic-bezier(0.5,0,0.2,1), pop-keyframe,
+   магнит через --mx/--my, blur-стриминг .rv-block (canon.css). */
+
+.nbar {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 56px;
+  height: 56px;
+  padding: 8px;
+  border-radius: 999px;
+  background: var(--accent-secondary);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  /* магнит + центровка одним transform (один источник transform!) */
+  transform: translateX(-50%) translate(var(--mx, 0px), var(--my, 0px));
+  transition: width 0.55s cubic-bezier(0.5, 0, 0.2, 1);
+}
+.nbar.open {
+  width: 420px;
+}
+.nbar.pop {
+  animation: nbar-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* keyframe перебивает весь transform → центровку держим внутри keyframe,
+   магнит на время pop обнулён (см. useNeuroBar) */
+@keyframes nbar-pop {
+  0% { transform: translateX(-50%) scale(0.97); }
+  55% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+.nbar-orb {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(circle at 30% 30%, #897eff, #ef3124);
+}
+.nbar-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.94);
+  font-family: var(--font);
+  font-size: 15px;
+  opacity: 0;
+  transition: opacity 0.35s ease 0.15s;
+}
+.nbar-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+.nbar.open .nbar-input {
+  opacity: 1;
+}
+
+/* ── фуллскрин-чат: реальный бокс fixed inset:0 (не display:contents —
+   на contents не работают filter/opacity) ── */
+.nchat {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: rgba(12, 12, 15, 0.92);
+  backdrop-filter: blur(24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease-in;
+}
+.nchat.open {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.nchat-scroll {
+  max-width: 640px;
+  width: 100%;
+}
+.nchat-q {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.94);
+  margin-bottom: 24px;
+}
+.nchat-a .rv-block {
+  font-size: 17px;
+  line-height: 26px;
+  color: rgba(255, 255, 255, 0.78);
+  margin-bottom: 14px;
+}
+.nchat-esc {
+  position: absolute;
+  bottom: 24px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+}

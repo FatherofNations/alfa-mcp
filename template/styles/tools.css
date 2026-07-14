@@ -1,0 +1,266 @@
+/* ═══════════ tools.css — панель прототипа, фрейм борда, свопы ═══════════
+   Инфраструктура прототипа (не макета): панель справа (.twk), плавающая
+   кнопка (.twk-fab), рамка-обрезка при открытой панели, диссолв свопа
+   дашбордов (.board/.board-body). См. proto://knowledge/tools-panel. */
+
+/* переменная сдвига: панель открыта → FAB уезжает влево */
+body { --twk: 0px; }
+body.twk-open { --twk: 320px; }
+
+/* ── Фрейм борда ──
+   .board — внешний ФРЕЙМ дашборда: подложка (--page-bg) + обрезка рамкой
+   twk-open. При свопе дашбордов НЕ анимируется — стоит неподвижно,
+   меняется только наполнение (.board-body). clip-path клипает и
+   fixed-потомков. */
+.board {
+  position: fixed;
+  inset: 0;
+  background: var(--page-bg);
+  clip-path: inset(0 round 0);
+  transition: clip-path 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* .board-body — НАПОЛНЕНИЕ: скролл-контейнер с контентом дашборда.
+   Появление после свопа — канон появления пейнов (0.5s + задержка 120ms).
+   Fixed inset:0 обязателен: во время filter (containing block для
+   fixed-потомков) геометрия совпадает с вьюпортом — сайдбары не съезжают. */
+.board-body {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  transition-delay: 0.12s;
+}
+/* Скрытие при свопе — канон скрытия: быстро в блюр, без задержки.
+   В момент подмены роута наполнение ПОЛНОСТЬЮ прозрачно → скачка нет. */
+.board-body.dash-out {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(10px);
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease-in,
+    filter 0.22s ease-in,
+    transform 0.22s ease-in;
+  transition-delay: 0s;
+}
+
+/* ── Рамка-обрезка при открытой панели ──
+   Вьюпорт борда ОБРЕЗАЕТСЯ (контент 1:1, НЕ масштабируется), вокруг —
+   тёмные поля. Фон полей — на html: всё содержимое body — fixed, фон body
+   экран не заливает. Класс twk-open ставится на body И documentElement. */
+html {
+  transition: background-color 0.5s ease;
+}
+html.twk-open {
+  background: #0c0c0f;
+}
+/* inset(верх право низ лево): справа панель 320 + зазор 12 = 332 */
+body.twk-open .board {
+  clip-path: inset(12px 332px 12px 12px round 20px);
+}
+
+/* ── Панель ── */
+.twk {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: #0c0c0f;
+  z-index: 80;
+  transform: translateX(100%);
+  transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  padding: 28px 24px;
+  box-sizing: border-box;
+  color: #fff;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.twk::-webkit-scrollbar {
+  display: none;
+}
+body.twk-open .twk {
+  transform: none;
+}
+
+/* ── карточки-селектор дашборда ── */
+.twk-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.twk-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.twk-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.twk-card.active {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.twk-card-t {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.94);
+}
+.twk-card-s {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── секции и строки ── */
+.twk-sec {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 36px 0 4px;
+}
+.twk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+}
+.twk-row:last-child {
+  border-bottom: none;
+}
+.twk-row .lb {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.92);
+}
+.twk-hint {
+  margin-top: 20px;
+  font-size: 13px;
+  line-height: 19px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.twk-hint b {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+/* ── iOS-свитч ── */
+.twk-sw {
+  position: relative;
+  width: 40px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.twk-sw input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.twk-sw i {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background-color 0.3s ease;
+  pointer-events: none;
+}
+.twk-sw i::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.twk-sw input:checked + i {
+  background: #34c759;
+}
+.twk-sw input:checked + i::after {
+  transform: translateX(16px);
+}
+
+/* ── смена содержимого панели: ремаунт .twk-dyn по key → стаггер из блюра ── */
+.twk-dyn > * {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(10px);
+  animation: twk-dyn-in 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation-delay: calc(60ms + var(--i, 0) * 30ms);
+}
+@keyframes twk-dyn-in {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+.twk-dyn > *:nth-child(1) { --i: 0; }
+.twk-dyn > *:nth-child(2) { --i: 1; }
+.twk-dyn > *:nth-child(3) { --i: 2; }
+.twk-dyn > *:nth-child(4) { --i: 3; }
+.twk-dyn > *:nth-child(5) { --i: 4; }
+.twk-dyn > *:nth-child(6) { --i: 5; }
+.twk-dyn > *:nth-child(7) { --i: 6; }
+.twk-dyn > *:nth-child(8) { --i: 7; }
+.twk-dyn > *:nth-child(9) { --i: 8; }
+.twk-dyn > *:nth-child(10) { --i: 9; }
+.twk-dyn > *:nth-child(11) { --i: 10; }
+.twk-dyn > *:nth-child(12) { --i: 11; }
+
+/* ── плавающая кнопка: едет влево вместе с панелью, иконка морфится ── */
+.twk-fab {
+  position: fixed;
+  right: calc(24px + var(--twk));
+  bottom: 24px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-secondary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  z-index: 85;
+  transition: right 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  padding: 0;
+}
+.twk-fab svg {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  transition: opacity 0.35s ease, transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.twk-fab .x {
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+body.twk-open .twk-fab .sliders {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+body.twk-open .twk-fab .x {
+  opacity: 1;
+  transform: rotate(0);
+}
