@@ -19,7 +19,7 @@ import {
 function renderFiles(nameArg: string, route: string, hasToolsPanel: boolean) {
   const slug = route.slice(1);
   const comp = componentName(slug);
-  const feats = { toolsPanel: hasToolsPanel, deepLinks: true, mobileGate: true };
+  const feats = { toolsPanel: hasToolsPanel, deepLinks: true, mobileGate: true, chrome: true };
   const vars = { DASH_TITLE: nameArg, DASH_COMPONENT: comp, DASH_ID: slug };
   const page = applyPlaceholders(
     fs.readFileSync(path.join(TEMPLATE_DIR, "app/__dash__/page.tsx"), "utf8"),
@@ -90,7 +90,13 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         let html = applyPlaceholders(
           applyFeatureMarkers(
             fs.readFileSync(path.join(STATIC_TEMPLATE_DIR, "__dash__.html"), "utf8"),
-            { toolsPanel: false, deepLinks: false, mobileGate: /mobile-gate\.css/.test(indexHtml) }
+            {
+              toolsPanel: false,
+              deepLinks: false,
+              // фичи наследуем от index.html существующего проекта
+              mobileGate: /mobile-gate\.css/.test(indexHtml),
+              chrome: /chrome-side/.test(indexHtml),
+            }
           ),
           { DASH_TITLE: name, PROJECT_TITLE: name }
         );

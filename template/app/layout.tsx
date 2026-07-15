@@ -6,11 +6,17 @@ import "@/styles/tokens.css";
 import "@/styles/fonts.css";
 import "@/styles/canon.css";
 import "@/styles/app.css";
+/* proto:if chrome */
+import "@/styles/chrome.css";
+/* proto:endif */
 /* proto:if toolsPanel */
 import "@/styles/tools.css";
 /* proto:endif */
 /* proto:if mobileGate */
 import "@/styles/mobile-gate.css";
+/* proto:endif */
+/* proto:if chrome */
+import AppChrome from "@/components/chrome/AppChrome";
 /* proto:endif */
 /* proto:if toolsPanel */
 import ToolsProvider from "@/components/tools/ToolsProvider";
@@ -43,9 +49,18 @@ export default function RootLayout({
     <html lang="ru">
       <body>
         {/* proto:if toolsPanel */}
-        <ToolsProvider>{children}</ToolsProvider>
+        <ToolsProvider>
+          {/* proto:if chrome */}
+          {/* хром внутри board-body: растворяется при свопах вместе с контентом */}
+          <AppChrome />
+          {/* proto:endif */}
+          {children}
+        </ToolsProvider>
         {/* proto:else */}
-        <main>{children}</main>
+        {/* proto:if chrome */}
+        <AppChrome />
+        {/* proto:endif */}
+        {children}
         {/* proto:endif */}
         {/* proto:if mobileGate */}
         {/* заглушка <1024px: прототип десктопный (styles/mobile-gate.css) */}

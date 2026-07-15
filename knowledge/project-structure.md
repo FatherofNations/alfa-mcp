@@ -14,6 +14,10 @@
     robots.ts             # noindex: прототипы не индексируем
     icon.svg              # фавикон-плейсхолдер
   components/
+    chrome/
+      AppChrome.tsx       # БАЗОВЫЙ ХРОМ (default on): сайдбар 248 + шапка 56,
+                          # 1:1 из проверенного дашборда; меню — medium.
+                          # Пункты меню/данные шапки правь прямо здесь
     tools/                # (опция toolsPanel — ТОЛЬКО по явной просьбе)
       ToolsProvider.tsx   # контекст прототипа: dashboard, panelOpen, swapTo,
                           # deep-links, body-классы
@@ -26,12 +30,14 @@
     tokens.css            # CSS-переменные из Figma (extract_tokens)
     fonts.css             # @font-face (ставится при скаффолде)
     canon.css             # анимационный канон utility-классами
+    chrome.css            # (при chrome) сайдбар/шапка + .chrome-main
     tools.css             # (при toolsPanel) панель, .board, рамка, диссолв
     mobile-gate.css       # заглушка <1024px
     app.css               # стили страниц проекта (сюда верстается макет)
   data/                   # демо-данные ОТДЕЛЬНО от вёрстки
   public/
-    assets/figma/         # ассеты: download_assets (Figma MCP) → process_assets
+    assets/chrome/        # ассеты хрома (лого, иконки меню/шапки)
+    assets/figma/         # ассеты макета: download_assets → process_assets
     fonts/                # woff2 (ставятся при скаффолде)
   scripts/
     extract.py            # экстрактор byte-perfect партиалов (путь миграции)
@@ -40,6 +46,16 @@
   vercel.json             # {"framework":"nextjs"} — страховка пресета
   HANDOFF.md              # handoff-документ (заполняется по ходу)
 ```
+
+## Базовый хром (default on)
+
+Каждая страница получает готовые **боковое меню (248, fixed слева)** и
+**шапку (56, fixed сверху)** — перенесены 1:1 из проверенного дашборда,
+их не нужно разрабатывать заново. Контент страницы кладётся в
+`<main class="page chrome-main">` — отступы под хром даёт `chrome.css`.
+Пункты меню и данные шапки правятся прямо в `AppChrome.tsx` (next) или в
+html-страницах (static). Отключение: `scaffold_project` c
+`features.chrome: false`.
 
 ## Правила слоёв
 

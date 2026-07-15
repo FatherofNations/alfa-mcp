@@ -12,7 +12,8 @@ import { usePageBehavior } from "@/lib/usePageBehavior";
 function __DASH_COMPONENT__Inner() {
   usePageBehavior();
   return (
-    <main className="page">
+    /* chrome-main даёт отступы под сайдбар/шапку (no-op, если хром выключен) */
+    <main className="page chrome-main">
       <div className="page-inner pf-reveal pf-stagger pf-hidden">
         <h1 className="page-title">__DASH_TITLE__</h1>
         <p className="page-sub">

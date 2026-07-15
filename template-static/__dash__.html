@@ -15,15 +15,109 @@
   <link rel="stylesheet" href="styles/fonts.css">
   <link rel="stylesheet" href="styles/canon.css">
   <link rel="stylesheet" href="styles/app.css">
+  <!-- proto:if chrome -->
+  <link rel="stylesheet" href="styles/chrome.css">
+  <!-- proto:endif -->
   <!-- proto:if mobileGate -->
   <link rel="stylesheet" href="styles/mobile-gate.css">
   <!-- proto:endif -->
 </head>
 <body>
+  <!-- proto:if chrome -->
+  <!-- ═══ Базовый хром: сайдбар + шапка (1:1 из проверенного дашборда,
+       шрифт меню — medium). Пункты меню и данные шапки меняйте под
+       прототип прямо здесь. ═══ -->
+  <aside class="chrome-side">
+    <div class="chrome-logo">
+      <img src="assets/chrome/logo.svg" width="248" height="64" alt="Альфа-Бизнес">
+      <img class="chrome-logo-grad" src="assets/chrome/logo-grad.webp" width="248" height="8" alt="">
+    </div>
+    <nav class="chrome-nav">
+      <a class="chrome-cell">
+        <span class="chrome-ico"><img src="assets/chrome/nav-all.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Все сервисы</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico"><img src="assets/chrome/nav-bonus.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Альфа-Выгодно</span>
+      </a>
+      <div class="chrome-div"><i></i></div>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-pay.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Новый платёж</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-feed.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Лента операций</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-progress.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Платежи в работе</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-import.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Импорт реестров</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-statement.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Выписка</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-accounts.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Счета</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-contragents.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Контрагенты</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-cards.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Карты</span>
+      </a>
+      <a class="chrome-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-pay.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Эквайринг и касса</span>
+      </a>
+      <div class="chrome-div"><i></i></div>
+      <a class="chrome-cell chrome-cell-proc">
+        <span class="chrome-ico dim">
+          <img src="assets/chrome/nav-procurement.svg" width="20" height="20" alt="">
+          <img class="chrome-proc-border" src="assets/chrome/nav-proc-border.webp" width="32" height="32" alt="">
+        </span>
+        <span class="chrome-cell-t">Госзакупки</span>
+      </a>
+    </nav>
+    <div class="chrome-footer">
+      <div class="chrome-footer-fade"></div>
+      <a class="chrome-cell chrome-footer-cell">
+        <span class="chrome-ico dim"><img src="assets/chrome/nav-gear.svg" width="20" height="20" alt=""></span>
+        <span class="chrome-cell-t">Настроить меню</span>
+      </a>
+    </div>
+  </aside>
+  <header class="chrome-header">
+    <div class="chrome-hbtns">
+      <button class="chrome-hbtn" aria-label="Письма"><img src="assets/chrome/hdr-mail.svg" width="20" height="20" alt=""></button>
+      <button class="chrome-hbtn" aria-label="Уведомления"><img src="assets/chrome/hdr-bell.svg" width="20" height="20" alt=""></button>
+    </div>
+    <span class="chrome-hdiv"></span>
+    <div class="chrome-company">
+      <span class="chrome-co-logo"></span>
+      <span class="chrome-co-info"><b>ООО «Город Нагатино»</b><i>Набоков И.Д.</i></span>
+    </div>
+    <span class="chrome-hdiv"></span>
+    <button class="chrome-person">
+      <span class="chrome-person-av"></span>
+      <span class="chrome-person-t">Предприниматель</span>
+    </button>
+    <span class="chrome-hdiv"></span>
+    <button class="chrome-hbtn" aria-label="Выйти"><img src="assets/chrome/hdr-exit.svg" width="20" height="20" alt=""></button>
+  </header>
+  <!-- proto:endif -->
   <!-- Заготовка дашборда «__DASH_TITLE__». Сюда верстается макет:
        статичную разметку переносить byte-perfect по design context
        (proto://knowledge/pixel-perfect), анимации — классы из canon.css. -->
-  <main class="page">
+  <main class="page chrome-main">
     <div class="page-inner pf-reveal pf-stagger pf-hidden">
       <h1 class="page-title">__DASH_TITLE__</h1>
       <p class="page-sub">Заготовка дашборда. Замените содержимое вёрсткой по макету.</p>

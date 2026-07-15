@@ -34,6 +34,7 @@ import {
    - next: Next.js 15 + React — масштабируемость, панель tools,
      deep-links, компоненты core-ds. */
 
+/* записи с "/" на конце — префиксы-директории */
 const FEATURE_FILES: Record<keyof Features, string[]> = {
   toolsPanel: [
     "components/tools/ToolsProvider.tsx",
@@ -43,7 +44,18 @@ const FEATURE_FILES: Record<keyof Features, string[]> = {
   ],
   mobileGate: ["styles/mobile-gate.css"],
   deepLinks: [],
+  chrome: ["components/chrome/AppChrome.tsx", "styles/chrome.css", "public/assets/chrome/"],
 };
+
+const STATIC_FEATURE_FILES: Record<keyof Features, string[]> = {
+  toolsPanel: [],
+  mobileGate: ["styles/mobile-gate.css"],
+  deepLinks: [],
+  chrome: ["styles/chrome.css", "assets/chrome/"],
+};
+
+const skipsFile = (skip: string[], relNorm: string) =>
+  skip.some((s) => (s.endsWith("/") ? relNorm.startsWith(s) : relNorm === s));
 
 const PER_DASHBOARD = ["app/__dash__/page.tsx", "components/dashboards/__Dash__.tsx"];
 
@@ -85,16 +97,16 @@ async function installFontsTo(
 
 /* ── Next.js-стек ── */
 async function generateNext(projectDir: string, a: ScaffoldArgs, r: Report) {
-  const skip = new Set<string>(PER_DASHBOARD);
+  const skip: string[] = [...PER_DASHBOARD];
   for (const [flag, files] of Object.entries(FEATURE_FILES)) {
-    if (!a.feats[flag as keyof Features]) files.forEach((f) => skip.add(f));
+    if (!a.feats[flag as keyof Features]) skip.push(...files);
   }
 
   const vars = { PROJECT_NAME: a.name, PROJECT_TITLE: a.title };
   let copied = 0;
   for (const rel of listFiles(TEMPLATE_DIR)) {
     const relNorm = rel.split(path.sep).join("/");
-    if (skip.has(relNorm)) continue;
+    if (skipsFile(skip, relNorm)) continue;
     const src = path.join(TEMPLATE_DIR, rel);
     // _gitignore → .gitignore (npm не пакует настоящие .gitignore)
     const destRel = relNorm === "_gitignore" ? ".gitignore" : relNorm;
@@ -170,11 +182,15 @@ async function generateStatic(projectDir: string, a: ScaffoldArgs, r: Report) {
     r.add("⚠ панель tools доступна только в next-стеке — пропущена (нужна панель → пересоздай с stack: next)");
   }
   const vars = { PROJECT_NAME: a.name, PROJECT_TITLE: a.title };
+  const skip: string[] = [];
+  for (const [flag, files] of Object.entries(STATIC_FEATURE_FILES)) {
+    if (!a.feats[flag as keyof Features]) skip.push(...files);
+  }
   let copied = 0;
   for (const rel of listFiles(STATIC_TEMPLATE_DIR)) {
     const relNorm = rel.split(path.sep).join("/");
     if (relNorm === "__dash__.html") continue; // инстанцируется по дашбордам
-    if (!a.feats.mobileGate && relNorm === "styles/mobile-gate.css") continue;
+    if (skipsFile(skip, relNorm)) continue;
     const src = path.join(STATIC_TEMPLATE_DIR, rel);
     const destRel = relNorm === "_gitignore" ? ".gitignore" : relNorm;
     const dest = path.join(projectDir, destRel);
@@ -259,9 +275,13 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
               .default(true)
               .describe("состояние в URL (работает вместе с toolsPanel)"),
             mobileGate: z.boolean().default(true).describe("заглушка <1024px"),
+            chrome: z
+              .boolean()
+              .default(true)
+              .describe("базовый хром: боковое меню + шапка на всех страницах (default true)"),
           })
           .default({})
-          .describe("фичи шаблона (по умолчанию: без панели, с mobile-gate)"),
+          .describe("фичи шаблона (по умолчанию: без панели, с mobile-gate и хромом)"),
         installFonts: z
           .boolean()
           .default(true)
@@ -277,6 +297,7 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
           toolsPanel: features?.toolsPanel ?? false,
           deepLinks: features?.deepLinks ?? true,
           mobileGate: features?.mobileGate ?? true,
+          chrome: features?.chrome ?? true,
         },
         installFonts: installFonts ?? true,
       };

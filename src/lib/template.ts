@@ -10,6 +10,7 @@ export type Features = {
   toolsPanel: boolean;
   deepLinks: boolean;
   mobileGate: boolean;
+  chrome: boolean; // базовый хром: сайдбар + шапка
 };
 
 const IF_RE = /proto:if\s+([a-zA-Z]+)/;

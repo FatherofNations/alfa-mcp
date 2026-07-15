@@ -127,8 +127,21 @@ try {
   check("  БЕЗ панели tools (дефолт)", !fs.existsSync(path.join(proj, "components/tools")) && !fs.existsSync(path.join(proj, "styles/tools.css")) && !fs.existsSync(path.join(proj, "lib/dashboards.ts")));
   check("  БЕЗ neuro (удалён из шаблона)", !fs.existsSync(path.join(proj, "components/neuro")) && !fs.existsSync(path.join(proj, "styles/neuro.css")));
   const layout = fs.readFileSync(path.join(proj, "app/layout.tsx"), "utf8");
-  check("  layout: <main>, без ToolsProvider и маркеров", layout.includes("<main>{children}</main>") && !layout.includes("ToolsProvider") && !/proto:(if|else|endif)/.test(layout));
+  check("  layout: AppChrome без ToolsProvider, маркеры вычищены", layout.includes("<AppChrome />") && !layout.includes("ToolsProvider") && !/proto:(if|else|endif)/.test(layout));
+  check("  хром: компонент + ассеты + css (дефолт on)", fs.existsSync(path.join(proj, "components/chrome/AppChrome.tsx")) && fs.existsSync(path.join(proj, "public/assets/chrome/logo.svg")) && fs.existsSync(path.join(proj, "styles/chrome.css")));
+  const chromeCss = fs.readFileSync(path.join(proj, "styles/chrome.css"), "utf8");
+  check("  меню — medium (500)", /chrome-cell-t\s*{[^}]*font-weight:\s*500/s.test(chromeCss));
   check("  один дашборд «Главная» на /", fs.readFileSync(path.join(proj, "app/page.tsx"), "utf8").includes("Glavnaya"));
+
+  // chrome можно выключить
+  const noChrome = await rpc("tools/call", {
+    name: "scaffold_project",
+    arguments: { stack: "next", name: "no-chrome", features: { chrome: false }, installFonts: false },
+  });
+  check("scaffold с chrome:false", !noChrome.isError);
+  const nc = path.join(tmp, "no-chrome");
+  check("  без хрома: нет компонента/ассетов/css", !fs.existsSync(path.join(nc, "components/chrome")) && !fs.existsSync(path.join(nc, "public/assets/chrome")) && !fs.existsSync(path.join(nc, "styles/chrome.css")));
+  check("  layout без AppChrome", !fs.readFileSync(path.join(nc, "app/layout.tsx"), "utf8").includes("AppChrome"));
 
   // ── scaffold_project: панель tools по явной просьбе ──
   const scaffold2 = await rpc("tools/call", {
@@ -172,14 +185,16 @@ try {
   const indexHtml = fs.readFileSync(path.join(sproj, "index.html"), "utf8");
   check("  html: заголовок и mobile-gate", indexHtml.includes("<h1 class=\"page-title\">Главная</h1>") && indexHtml.includes("mgate"));
   check("  html: маркеры вычищены", !/proto:(if|else|endif)/.test(indexHtml));
+  check("  html: хром (сайдбар+шапка) на странице", indexHtml.includes("chrome-side") && indexHtml.includes("chrome-header") && fs.existsSync(path.join(sproj, "assets/chrome/logo.svg")));
   check("  предупреждение про панель в static", ssOut.includes("панель tools доступна только в next"));
 
-  // register_dashboard в static-проект → новая html-страница
+  // register_dashboard в static-проект → новая html-страница (наследует хром)
   const regStatic = await rpc("tools/call", {
     name: "register_dashboard",
     arguments: { name: "Бухгалтер", route: "/accountant", targetDir: "static-proto" },
   });
   check("register_dashboard (static)", !regStatic.isError && fs.existsSync(path.join(sproj, "accountant.html")), text(regStatic).slice(0, 200));
+  check("  новая страница наследует хром", fs.readFileSync(path.join(sproj, "accountant.html"), "utf8").includes("chrome-side"));
 
   // ── register_dashboard ──
   const regDash = await rpc("tools/call", {

@@ -1,0 +1,180 @@
+/* ═══════════ chrome.css — базовый хром страницы ═══════════
+   Сайдбар 248 (fixed слева) + шапка 56 (fixed сверху). Перенесено 1:1 из
+   проверенного дашборда (nefor-dash /current), классы cur-* → chrome-*.
+   Единственное осознанное отличие от исходника: шрифт пунктов меню —
+   MEDIUM (500), решение команды.
+   Контент страницы — <main class="page chrome-main"> (отступы ниже). */
+
+/* ── Боковое меню ── */
+.chrome-side {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 248px;
+  height: 100vh;
+  background: var(--page-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+.chrome-logo { position: relative; flex: none; }
+.chrome-logo-grad { width: 248px; height: 8px; display: block; }
+
+.chrome-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.chrome-nav::-webkit-scrollbar { display: none; }
+
+.chrome-cell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  position: relative;
+  text-decoration: none;
+  cursor: pointer;
+}
+.chrome-ico {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chrome-ico.dim { opacity: 0.6; }
+.chrome-ico img { width: 20px; height: 20px; }
+/* шрифт меню — medium (единственное отступление от исходника) */
+.chrome-cell-t {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: var(--ls-16-medium, -0.05px);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.chrome-div { padding: 12px 16px; }
+.chrome-div i { display: block; height: 1px; background: var(--nt-300, rgba(15, 25, 55, 0.1)); }
+
+/* пунктирная обводка вокруг иконки «Госзакупки» */
+.chrome-cell-proc .chrome-ico { position: relative; overflow: visible; }
+/* специфичнее, чем `.chrome-ico img{width:20}`, иначе рамка сжимается до 20 */
+.chrome-cell-proc .chrome-ico .chrome-proc-border {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 32px;
+  height: 32px;
+}
+
+.chrome-footer { flex: none; position: relative; background: var(--page-bg); }
+.chrome-footer-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(242, 243, 245, 0), var(--page-bg));
+  pointer-events: none;
+}
+.chrome-footer-cell { padding: 10px 22px 22px; }
+.chrome-footer-cell .chrome-cell-t { color: var(--text-secondary); }
+
+/* ── Шапка ── */
+.chrome-header {
+  position: fixed;
+  top: 0;
+  left: 248px;
+  right: 0;
+  height: 56px;
+  background: var(--page-bg);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 0 24px;
+  z-index: 40;
+}
+.chrome-header button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.chrome-hbtns { display: flex; gap: 8px; }
+.chrome-hbtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chrome-hbtn img { width: 20px; height: 20px; }
+.chrome-hdiv { flex: none; width: 1px; height: 32px; background: var(--nt-300, rgba(15, 25, 55, 0.1)); }
+
+.chrome-company { display: flex; align-items: center; gap: 12px; padding-left: 8px; }
+.chrome-co-logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  background: #e9edf3 center/cover no-repeat;
+  background-image: url(/assets/chrome/hdr-company.webp);
+  -webkit-mask: url(/assets/chrome/squircle-40.svg) center/contain no-repeat;
+          mask: url(/assets/chrome/squircle-40.svg) center/contain no-repeat;
+}
+.chrome-co-info { display: flex; flex-direction: column; }
+.chrome-co-info b {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: var(--ls-14-medium, 0.07px);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.chrome-co-info i {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: var(--ls-12-regular, 0.06px);
+  color: var(--text-secondary);
+}
+
+/* специфичность выше сброса .chrome-header button (иначе padding обнулится) */
+.chrome-header .chrome-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-secondary);
+  border-radius: 999px;
+  padding: 8px 16px 8px 8px;
+}
+.chrome-person-av {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  background: url(/assets/chrome/hdr-avatar.webp) center/cover no-repeat,
+    linear-gradient(128.66deg, #f2b9ec 3%, #edc6c8 92%);
+  -webkit-mask: url(/assets/chrome/squircle-24.svg) center/contain no-repeat;
+          mask: url(/assets/chrome/squircle-24.svg) center/contain no-repeat;
+}
+.chrome-person-t {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.19px;
+  color: var(--text-inverted-primary, rgba(255, 255, 255, 0.94));
+  white-space: nowrap;
+}
+
+/* ── Контент под хромом ──
+   margin слева под сайдбар, паддинг сверху под шапку (56 + 24 зазор). */
+.chrome-main {
+  margin: 0 0 0 248px;
+  padding-top: 80px;
+}
