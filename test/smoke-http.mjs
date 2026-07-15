@@ -71,6 +71,12 @@ try {
     clientInfo: { name: "smoke-http", version: "0" },
   });
   check("initialize", init.serverInfo?.name === "proto-forge");
+  check(
+    "иконка коннектора (http: URL на сервере)",
+    init.serverInfo?.icons?.some((i) => i.src === `${BASE}/icon.png`)
+  );
+  const iconRes = await fetch(`${BASE}/icon.png`);
+  check("GET /icon.png = 200 png", iconRes.ok && iconRes.headers.get("content-type") === "image/png");
   const tools = await rpc("tools/list", {}, 2);
   check("tools/list = 8", tools.tools.length === 8, `получено ${tools.tools.length}`);
 
@@ -79,7 +85,7 @@ try {
     "tools/call",
     {
       name: "scaffold_project",
-      arguments: { name: "http-proto", features: { toolsPanel: true }, installFonts: false },
+      arguments: { stack: "next", name: "http-proto", features: { toolsPanel: true }, installFonts: false },
     },
     3
   );

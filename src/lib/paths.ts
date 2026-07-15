@@ -9,11 +9,16 @@ export const PKG_ROOT = path.resolve(HERE, "..", "..");
 
 export const KNOWLEDGE_DIR = path.join(PKG_ROOT, "knowledge");
 
-/* Шаблон можно переопределить (форк под другую дизайн-систему) через env. */
+/* Шаблоны можно переопределить (форк под другую дизайн-систему) через env. */
 export const TEMPLATE_DIR =
   process.env.PROTO_TEMPLATE_DIR && fs.existsSync(process.env.PROTO_TEMPLATE_DIR)
     ? process.env.PROTO_TEMPLATE_DIR
     : path.join(PKG_ROOT, "template");
+
+export const STATIC_TEMPLATE_DIR =
+  process.env.PROTO_TEMPLATE_STATIC_DIR && fs.existsSync(process.env.PROTO_TEMPLATE_STATIC_DIR)
+    ? process.env.PROTO_TEMPLATE_STATIC_DIR
+    : path.join(PKG_ROOT, "template-static");
 
 /* Все пути в аргументах тулов — относительно cwd процесса-клиента
    (Claude Code запускает сервер в корне проекта агента). Абсолютные

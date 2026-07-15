@@ -1,5 +1,18 @@
 # design-system — работа с core-ds (дизайн-система Альфы)
 
+## React-компоненты (next-стек)
+
+Публичная библиотека [core-ds/core-components](https://github.com/core-ds/core-components):
+`npm i @alfalab/core-components` (umbrella, v50+) или точечные пакеты
+(`@alfalab/core-components-button` и т.д.). Витрина:
+https://alfabank.github.io/core-components.
+
+Использовать для **стандартных контролов** (кнопки, инпуты, свитчи,
+селекты, модалки) — стабильнее ручной вёрстки: состояния, a11y и края
+уже сделаны. Уникальные виджеты макета верстать кастомным CSS — против
+конкретного макета он точнее (версия компонента может отличаться от
+макета дизайнера). Подробнее о выборе — proto://knowledge/stack-choice.
+
 ## Шрифты
 
 Источник: `github.com/core-ds/core-components`, путь

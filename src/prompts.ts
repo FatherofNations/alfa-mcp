@@ -30,7 +30,7 @@ export function registerPrompts(server: McpServer) {
 2. get_metadata по фрейму ${nodeId} → список под-узлов; get_design_context ПО КАЖДОМУ крупному под-узлу (лимит ~25k токенов). get_screenshot фрейма — сохранить как эталон.
 3. get_variable_defs → extract_tokens (если токены ещё не выгружены).
 4. За ОДИН проход собери список всех ассетов (иконки svg, картинки png) с node-id и camelCase-именами → ОДИН батч download_assets (Figma MCP) в public/assets/figma → сразу process_assets на папку.
-5. Если проект ещё не создан — scaffold_project; иначе register_dashboard (name="${name}").
+5. Если проект ещё не создан — СНАЧАЛА спроси пользователя про стек (static или next, критерии в proto://knowledge/stack-choice) → scaffold_project; иначе register_dashboard (name="${name}").
 6. Вёрстка строго по design context (не по скриншоту), данные — в data/*. Анимации — только add_animation / канон.
 7. Бленд-дифф с эталоном; npm run verify; get_checklist(stage:"qa") — пройди все пункты.
 Отступления от макета фиксируй в HANDOFF.md.`)

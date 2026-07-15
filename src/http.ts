@@ -7,6 +7,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { buildServer } from "./app.js";
 import { ServerCtx } from "./lib/ctx.js";
+import { PKG_ROOT } from "./lib/paths.js";
 import { processAssetsDir, ProcessOptions } from "./lib/process.js";
 
 /* Streamable HTTP хостинг (stateless): один сервер на команду.
@@ -61,6 +62,19 @@ export function startHttp(port: number) {
   app.get("/healthz", (_req, res) => {
     res.json({ ok: true, server: "proto-forge", transport: "streamable-http" });
   });
+
+  // ── аватарка коннектора (публично, без auth): логотип из brand/ ──
+  for (const [route, file, mime] of [
+    ["/icon.svg", "brand/icon.svg", "image/svg+xml"],
+    ["/icon.png", "brand/icon.png", "image/png"],
+    ["/favicon.ico", "brand/icon.png", "image/png"],
+  ] as const) {
+    app.get(route, (_req, res) => {
+      res.setHeader("Content-Type", mime);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      fs.createReadStream(path.join(PKG_ROOT, file)).pipe(res);
+    });
+  }
 
   // ── MCP (stateless: инстанс на запрос) ──
   app.post("/mcp", requireAuth, express.json({ limit: "8mb" }), async (req, res) => {

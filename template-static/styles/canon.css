@@ -1,0 +1,212 @@
+/* ═══════════════ canon.css — анимационный канон utility-классами ═══════════════
+   Источник значений: proto://knowledge/animation-canon. Кривые и тайминги
+   выверены на живых прототипах — НЕ менять и не изобретать новые.
+
+   Базовые кривые:
+     появление (opacity/filter): 0.5s  cubic-bezier(0.25, 0.1, 0.25, 1)
+     появление (transform):      0.55s cubic-bezier(0.32, 0.72, 0, 1)
+     скрытие:                    0.22s ease-in (асимметрия осознанная)
+     структурная (iOS):          0.55s cubic-bezier(0.32, 0.72, 0, 1)
+     сворачивание (ease-in-out): cubic-bezier(0.65, 0, 0.35, 1)
+
+   ВАЖНО: blur/transform создают контекст наложения — z-index дропдаунов
+   ставить на контейнер уровнем выше (см. react-patterns). */
+
+/* ── 1-2. Появление из блюра / скрытие ──
+   Элемент: .pf-reveal (+ .pf-hidden пока скрыт). Снятие .pf-hidden
+   проявляет по канону; возврат .pf-hidden прячет быстро (0.22s). */
+.pf-reveal {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.pf-reveal.pf-hidden {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease-in,
+    filter 0.22s ease-in,
+    transform 0.22s ease-in;
+  transition-delay: 0s; /* прячем без задержки */
+}
+
+/* ── 3. Стаггер сверху вниз ──
+   На контейнер: .pf-stagger. Дети наследуют канон-переход и получают
+   задержку 120ms + i*30ms. --i проставить на элементах; для ≤12 детей
+   работает авто-набор nth-child ниже. */
+.pf-stagger > * {
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  transition-delay: calc(120ms + var(--i, 0) * 30ms);
+}
+.pf-reveal.pf-hidden.pf-stagger > *,
+.pf-stagger.pf-hidden > * {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(8px);
+  transition:
+    opacity 0.22s ease-in,
+    filter 0.22s ease-in,
+    transform 0.22s ease-in;
+  transition-delay: 0s;
+}
+.pf-stagger > *:nth-child(1) { --i: 0; }
+.pf-stagger > *:nth-child(2) { --i: 1; }
+.pf-stagger > *:nth-child(3) { --i: 2; }
+.pf-stagger > *:nth-child(4) { --i: 3; }
+.pf-stagger > *:nth-child(5) { --i: 4; }
+.pf-stagger > *:nth-child(6) { --i: 5; }
+.pf-stagger > *:nth-child(7) { --i: 6; }
+.pf-stagger > *:nth-child(8) { --i: 7; }
+.pf-stagger > *:nth-child(9) { --i: 8; }
+.pf-stagger > *:nth-child(10) { --i: 9; }
+.pf-stagger > *:nth-child(11) { --i: 10; }
+.pf-stagger > *:nth-child(12) { --i: 11; }
+
+/* ── 4. Переключение пейнов (табы) ──
+   Оба пейна absolute в одной точке; старому — .hidden (канон скрытия),
+   новому снять. Свап данных — в момент полной прозрачности (~220ms). */
+.pf-pane-wrap { position: relative; }
+.pf-pane { position: absolute; inset: 0; }
+.pf-pane.hidden {
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateY(10px);
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease-in,
+    filter 0.22s ease-in,
+    transform 0.22s ease-in;
+}
+.pf-pane:not(.hidden) {
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+  transition-delay: 0.12s;
+}
+
+/* ── 6. Сворачивание: кривая из состояния-НАЗНАЧЕНИЯ ── */
+.pf-collapsible {
+  transition: height 0.55s cubic-bezier(0.32, 0.72, 0, 1); /* → развёрнуто */
+}
+.pf-collapsible.collapsed {
+  transition: height 0.5s cubic-bezier(0.65, 0, 0.35, 1); /* → свёрнуто */
+}
+
+/* ── 7. Хлопок-морф (пилюля) ──
+   width плавно; «живость» — keyframe scale. ВНИМАНИЕ: keyframe с transform
+   перебивает ВЕСЬ transform — обнулить --mx/--my магнита перед запуском. */
+.pf-pill { transition: width 0.55s cubic-bezier(0.5, 0, 0.2, 1); }
+.pf-pill.pop { animation: pf-pill-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes pf-pill-pop {
+  0% { transform: scale(0.97); }
+  55% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ── 8. Скользящая капсула табов ──
+   Слой под кнопками; left/width ставит JS по getBoundingClientRect
+   (суб-пиксель!); перемер на document.fonts.ready с transition:none. */
+.pf-tab-cap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  transition:
+    left 0.55s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.pf-tab-cap.fly { animation: pf-cap-squish 0.55s cubic-bezier(0.32, 0.72, 0, 1); }
+@keyframes pf-cap-squish {
+  0% { transform: scaleX(1); }
+  50% { transform: scaleX(0.9); }
+  100% { transform: scaleX(1); }
+}
+
+/* ── 9. Вертикальный тикер строк ──
+   Клип-контейнер; строки absolute; старая → translateY(-H), новая с +H.
+   Ширину контейнера двигает JS по rect новой строки. */
+.pf-ticker {
+  position: relative;
+  overflow: hidden;
+  transition: width 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.pf-ticker-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ── 10. Вращающаяся обводка ──
+   conic-gradient по @property-углу; маска оставляет только рамку.
+   Цикл с «передышкой»: 0→50% оборот, 50→100% hold (360deg ≡ 0 — бесшовно). */
+@property --pf-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.pf-ring { position: relative; }
+.pf-ring::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--pf-angle),
+    transparent 10%,
+    currentColor 50%,
+    transparent 90%
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: pf-ring-spin 3s linear infinite;
+  pointer-events: none;
+}
+@keyframes pf-ring-spin {
+  0% { --pf-angle: 0deg; }
+  50% { --pf-angle: 360deg; }
+  100% { --pf-angle: 360deg; }
+}
+
+/* ── 11. Магнит к курсору ──
+   JS пишет --mx/--my (rAF-троттл, радиус ~210px, clamp) — см. канон-документ.
+   Один источник transform: совмещение эффектов только через переменные. */
+.pf-magnet {
+  transform: translate(var(--mx, 0px), var(--my, 0px));
+}
+
+/* ── 12. Blur-стриминг текста ──
+   Блоки: opacity/blur10/translateY8 → 0. Слова: только opacity+blur
+   (transform на inline не работает). Классы .in проставляет JS по мере
+   «печати». */
+.rv-block {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(8px);
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.5s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.rv-word {
+  opacity: 0;
+  filter: blur(6px);
+  transition: opacity 0.35s ease, filter 0.35s ease;
+}
+.rv-block.in,
+.rv-word.in {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}

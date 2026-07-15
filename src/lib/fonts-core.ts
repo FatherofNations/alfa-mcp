@@ -27,11 +27,14 @@ export const FAMILIES: Record<string, FontFile[]> = {
 
 export const DEFAULT_FAMILIES = ["alfa-interface-sans", "styrene-ui"];
 
-export function fontFaceCss(fonts: FontFile[]): string {
+/* urlBase: "/fonts" для Next (пути от корня public); "../fonts" для
+   статики (fonts.css лежит в styles/, пути относительные — работает и
+   при хостинге из под-папки). */
+export function fontFaceCss(fonts: FontFile[], urlBase = "/fonts"): string {
   const blocks = fonts.map(
     (f) => `@font-face {
   font-family: '${f.family}';
-  src: url('/fonts/${f.file}') format('woff2');
+  src: url('${urlBase}/${f.file}') format('woff2');
   font-weight: ${f.weight};
   font-style: normal;
   font-display: swap;
@@ -42,6 +45,16 @@ export function fontFaceCss(fonts: FontFile[]): string {
 
 ${blocks.join("\n\n")}
 `;
+}
+
+/* <link rel="preload"> для статических html (crossorigin обязателен). */
+export function preloadLinksHtml(fonts: FontFile[], hrefBase = "fonts"): string {
+  return fonts
+    .map(
+      (f) =>
+        `  <link rel="preload" href="${hrefBase}/${f.file}" as="font" type="font/woff2" crossorigin>`
+    )
+    .join("\n");
 }
 
 /** Качает один woff2; null при ошибке сети/валидации (magic 'wOF2'). */

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- прототип: не индексировать -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>__DASH_TITLE__ — __PROJECT_TITLE__</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <!-- preload шрифтов заполняется при скаффолде (убирает FOUT; crossorigin
+       обязателен — шрифты грузятся в CORS-режиме даже same-origin) -->
+  <!-- proto-forge:fonts -->
+  <!-- порядок CSS: tokens → fonts → canon → app (см. proto://knowledge/project-structure) -->
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/fonts.css">
+  <link rel="stylesheet" href="styles/canon.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <!-- proto:if mobileGate -->
+  <link rel="stylesheet" href="styles/mobile-gate.css">
+  <!-- proto:endif -->
+</head>
+<body>
+  <!-- Заготовка дашборда «__DASH_TITLE__». Сюда верстается макет:
+       статичную разметку переносить byte-perfect по design context
+       (proto://knowledge/pixel-perfect), анимации — классы из canon.css. -->
+  <main class="page">
+    <div class="page-inner pf-reveal pf-stagger pf-hidden">
+      <h1 class="page-title">__DASH_TITLE__</h1>
+      <p class="page-sub">Заготовка дашборда. Замените содержимое вёрсткой по макету.</p>
+      <div class="demo-grid">
+        <section class="demo-card">
+          <p class="demo-card-v">1 234 567 ₽</p>
+          <p class="demo-card-l">На счетах</p>
+        </section>
+        <section class="demo-card">
+          <p class="demo-card-v">456 789 ₽</p>
+          <p class="demo-card-l">Поступления за месяц</p>
+        </section>
+        <section class="demo-card">
+          <p class="demo-card-v">123 456 ₽</p>
+          <p class="demo-card-l">Списания за месяц</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <!-- proto:if mobileGate -->
+  <!-- заглушка <1024px: прототип десктопный (styles/mobile-gate.css) -->
+  <div class="mgate" role="status">
+    <img src="icon.svg" alt="" width="64" height="64">
+    <p class="mgate-t">Прототип рассчитан на десктоп</p>
+    <p class="mgate-s">Откройте эту ссылку на компьютере — мобильная версия ещё не свёрстана.</p>
+  </div>
+  <!-- proto:endif -->
+  <script src="js/app.js"></script>
+</body>
+</html>

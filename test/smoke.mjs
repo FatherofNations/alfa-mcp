@@ -65,6 +65,10 @@ try {
     clientInfo: { name: "smoke", version: "0" },
   });
   check("initialize", init.serverInfo?.name === "proto-forge");
+  check(
+    "иконка коннектора (stdio: data-URI)",
+    init.serverInfo?.icons?.[0]?.src?.startsWith("data:image/svg+xml;base64,")
+  );
   notify("notifications/initialized");
 
   // ── tools ──
@@ -78,7 +82,9 @@ try {
 
   // ── resources / prompts ──
   const res = await rpc("resources/list");
-  check("resources/list = 11 документов", res.resources.length === 11, `получено ${res.resources.length}`);
+  check("resources/list = 12 документов", res.resources.length === 12, `получено ${res.resources.length}`);
+  const stackDoc = await rpc("resources/read", { uri: "proto://knowledge/stack-choice" });
+  check("stack-choice: спросить пользователя + core-ds", stackDoc.contents[0].text.includes("@alfalab/core-components"));
   const canon = await rpc("resources/read", { uri: "proto://knowledge/animation-canon" });
   check("resources/read animation-canon", canon.contents[0].text.includes("cubic-bezier(0.32, 0.72, 0, 1)"));
   const fimport = await rpc("resources/read", { uri: "proto://knowledge/figma-import" });
@@ -95,10 +101,23 @@ try {
   });
   check("add_animation(stagger)", text(anim).includes(".feed > *:nth-child(4)"));
 
-  // ── scaffold_project: дефолт = минимальный (БЕЗ панели tools) ──
+  // ── scaffold_project: без stack → ошибка (агент обязан спросить пользователя) ──
+  let noStackFailed = false;
+  try {
+    const ns = await rpc("tools/call", {
+      name: "scaffold_project",
+      arguments: { name: "no-stack", installFonts: false },
+    });
+    noStackFailed = Boolean(ns.isError);
+  } catch {
+    noStackFailed = true;
+  }
+  check("scaffold без stack отвергнут", noStackFailed && !fs.existsSync(path.join(tmp, "no-stack")));
+
+  // ── scaffold_project (next): дефолт = минимальный (БЕЗ панели tools) ──
   const scaffold = await rpc("tools/call", {
     name: "scaffold_project",
-    arguments: { name: "demo-proto", title: "Демо", installFonts: false },
+    arguments: { stack: "next", name: "demo-proto", title: "Демо", installFonts: false },
   });
   check("scaffold_project (дефолты)", !scaffold.isError, text(scaffold).slice(0, 300));
   const proj = path.join(tmp, "demo-proto");
@@ -115,6 +134,7 @@ try {
   const scaffold2 = await rpc("tools/call", {
     name: "scaffold_project",
     arguments: {
+      stack: "next",
       name: "panel-proto",
       dashboards: ["Главная", "Отчёты"],
       features: { toolsPanel: true },
@@ -130,6 +150,36 @@ try {
   check("  заглушки «Параметр 1/2»", panel.includes("Параметр 1") && panel.includes("Параметр 2") && !panel.includes("Демо-состояние"));
   const playout = fs.readFileSync(path.join(pproj, "app/layout.tsx"), "utf8");
   check("  layout с ToolsProvider", playout.includes("<ToolsProvider>"));
+
+  // ── scaffold_project (static): html/css/js без сборки ──
+  const scaffoldS = await rpc("tools/call", {
+    name: "scaffold_project",
+    arguments: {
+      stack: "static",
+      name: "static-proto",
+      dashboards: ["Главная", "Отчёты"],
+      features: { toolsPanel: true }, // недоступно в static → ждём предупреждение
+      installFonts: false,
+    },
+  });
+  const ssOut = text(scaffoldS);
+  check("scaffold_project (static)", !scaffoldS.isError, ssOut.slice(0, 300));
+  const sproj = path.join(tmp, "static-proto");
+  for (const f of ["index.html", "otchety.html", "js/app.js", "styles/canon.css", "styles/app.css", "scripts/serve.py", ".gitignore"]) {
+    check(`  файл ${f}`, fs.existsSync(path.join(sproj, f)));
+  }
+  check("  БЕЗ package.json (нет сборки)", !fs.existsSync(path.join(sproj, "package.json")));
+  const indexHtml = fs.readFileSync(path.join(sproj, "index.html"), "utf8");
+  check("  html: заголовок и mobile-gate", indexHtml.includes("<h1 class=\"page-title\">Главная</h1>") && indexHtml.includes("mgate"));
+  check("  html: маркеры вычищены", !/proto:(if|else|endif)/.test(indexHtml));
+  check("  предупреждение про панель в static", ssOut.includes("панель tools доступна только в next"));
+
+  // register_dashboard в static-проект → новая html-страница
+  const regStatic = await rpc("tools/call", {
+    name: "register_dashboard",
+    arguments: { name: "Бухгалтер", route: "/accountant", targetDir: "static-proto" },
+  });
+  check("register_dashboard (static)", !regStatic.isError && fs.existsSync(path.join(sproj, "accountant.html")), text(regStatic).slice(0, 200));
 
   // ── register_dashboard ──
   const regDash = await rpc("tools/call", {

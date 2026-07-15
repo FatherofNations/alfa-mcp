@@ -1,6 +1,6 @@
 {
   "name": "proto-forge",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP-сервер для скоростной разработки интерактивных прототипов по Figma-макетам: база знаний, скаффолд, пайплайн ассетов, канон анимаций",
   "license": "MIT",
   "type": "module",
@@ -12,6 +12,8 @@
     "dist",
     "knowledge",
     "template",
+    "template-static",
+    "brand",
     "README.md"
   ],
   "engines": {

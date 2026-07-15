@@ -10,6 +10,8 @@ COPY tsconfig.json ./
 COPY src ./src
 COPY knowledge ./knowledge
 COPY template ./template
+COPY template-static ./template-static
+COPY brand ./brand
 RUN npm run build
 
 ENV PROTO_HTTP_PORT=8811

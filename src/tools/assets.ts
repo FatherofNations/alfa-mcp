@@ -27,7 +27,7 @@ export function registerAssets(server: McpServer, ctx: ServerCtx) {
         dir: z
           .string()
           .default("public/assets/figma")
-          .describe("папка с ассетами (default public/assets/figma)"),
+          .describe("папка с ассетами (next: public/assets/figma, static: assets/figma)"),
         webp: z.boolean().default(true).describe("конвертировать png → lossless webp, если меньше"),
         cleanBackground: z
           .array(z.string())

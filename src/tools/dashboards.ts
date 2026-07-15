@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { TEMPLATE_DIR, resolveInProject } from "../lib/paths.js";
+import { STATIC_TEMPLATE_DIR, TEMPLATE_DIR, resolveInProject } from "../lib/paths.js";
 import { Report, fail } from "../lib/report.js";
 import { ServerCtx } from "../lib/ctx.js";
 import {
@@ -80,6 +80,32 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
       }
 
       const root = resolveInProject(targetDir ?? ".");
+
+      // static-проект (index.html в корне, без app/): новая страница <slug>.html
+      if (fs.existsSync(path.join(root, "index.html")) && !fs.existsSync(path.join(root, "app"))) {
+        const slug = route.slice(1);
+        const htmlPath = path.join(root, `${slug}.html`);
+        if (fs.existsSync(htmlPath)) return fail(`${htmlPath} уже существует`);
+        const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
+        let html = applyPlaceholders(
+          applyFeatureMarkers(
+            fs.readFileSync(path.join(STATIC_TEMPLATE_DIR, "__dash__.html"), "utf8"),
+            { toolsPanel: false, deepLinks: false, mobileGate: /mobile-gate\.css/.test(indexHtml) }
+          ),
+          { DASH_TITLE: name, PROJECT_TITLE: name }
+        );
+        // preload-линки шрифтов — те же, что в index.html
+        const preloads = indexHtml.match(/^\s*<link rel="preload"[^>]*>$/gm) ?? [];
+        if (preloads.length) {
+          html = html.replace("  <!-- proto-forge:fonts -->", `${preloads.join("\n")}\n  <!-- proto-forge:fonts -->`);
+        }
+        writeFileEnsured(htmlPath, html);
+        const r = new Report();
+        r.add(`✓ ${slug}.html — страница «${name}» (static-стек)`);
+        r.add(`Открывается по http://localhost:8000/${slug}.html; ссылки между страницами добавь в разметке.`);
+        return r.toResult();
+      }
+
       const pagePath = path.join(root, `app/${route.slice(1)}/page.tsx`);
       if (!fs.existsSync(path.join(root, "app"))) {
         return fail(`нет ${root}/app — проект не из шаблона proto-forge (сначала scaffold_project)`);
