@@ -3,8 +3,8 @@ services:
     build: .
     container_name: proto-forge
     restart: unless-stopped
-    ports:
-      - "8811:8811"
+    expose:
+      - "8811"
     environment:
       - PROTO_HTTP_PORT=8811
       # Bearer-токен для /mcp (пусто = без аутентификации).
@@ -15,3 +15,31 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+
+      # редирект HTTP -> HTTPS
+      - "traefik.http.middlewares.pf-redirect-https.redirectscheme.scheme=https"
+
+      # HTTP
+      - "traefik.http.routers.pf-http.rule=Host(`alfa-mcp.leggit.ru`)"
+      - "traefik.http.routers.pf-http.entrypoints=web"
+      - "traefik.http.routers.pf-http.middlewares=pf-redirect-https"
+      - "traefik.http.routers.pf-http.service=pf-svc"
+
+      # HTTPS
+      - "traefik.http.routers.pf-https.rule=Host(`alfa-mcp.leggit.ru`)"
+      - "traefik.http.routers.pf-https.entrypoints=websecure"
+      - "traefik.http.routers.pf-https.tls.certresolver=myresolver"
+      - "traefik.http.routers.pf-https.service=pf-svc"
+
+      # сервис: внутренний порт 8811
+      - "traefik.http.services.pf-svc.loadbalancer.server.port=8811"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: proxy

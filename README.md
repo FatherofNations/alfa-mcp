@@ -12,12 +12,15 @@ Figma-макетам. Конденсат опыта реальных проек�
 
 ## Подключение (Claude Code)
 
-Командный сервер уже развёрнут — подключение одной командой:
+Командный сервер уже развёрнут (HTTPS через Traefik) — подключение одной
+командой:
 
 ```bash
-claude mcp add --transport http proto-forge http://45.139.77.60:8811/mcp \
+claude mcp add --transport http proto-forge https://alfa-mcp.leggit.ru/mcp \
   --header "Authorization: Bearer <токен>"
 ```
+
+Токен — в `/root/proto-forge/.env` на сервере (`PROTO_AUTH_TOKEN`).
 
 Альтернатива — локально по stdio (файловые тулы тогда пишут напрямую
 в проект):
@@ -76,8 +79,14 @@ scaffold_project (шрифты уже внутри) → get_variable_defs → ex
 ## Хостинг (HTTP-режим)
 
 ```bash
-docker compose up -d --build     # порт 8811, PROTO_AUTH_TOKEN в .env
+docker compose up -d --build     # PROTO_AUTH_TOKEN в .env
 ```
+
+`docker-compose.yml` подключает контейнер к внешней сети Traefik `proxy`
+и вешает роутер на `alfa-mcp.leggit.ru` (HTTP→HTTPS редирект, TLS через
+Let's Encrypt resolver `myresolver`). Host-порт наружу не публикуется —
+только через Traefik. За обратным прокси включён `trust proxy`, чтобы
+`/dl` и `/process` генерили `https://`-ссылки.
 
 Эндпоинты: `POST /mcp` (Streamable HTTP, stateless), `GET /dl/…`
 (тарбол скаффолда, TTL 30 мин), `POST /process…` (round-trip обработка

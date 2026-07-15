@@ -45,6 +45,11 @@ export function startHttp(port: number) {
 
   const app = express();
   app.disable("x-powered-by");
+  // За reverse-proxy (Traefik терминирует TLS) — доверяем первому хопу,
+  // чтобы req.protocol брался из X-Forwarded-Proto (=https). Иначе URL
+  // для /dl и /process сгенерятся как http:// и curl без -L упадёт на
+  // редиректе HTTP→HTTPS.
+  app.set("trust proxy", 1);
 
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     if (!authToken) return next();
