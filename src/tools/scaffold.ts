@@ -26,6 +26,11 @@ import {
   slugify,
   writeFileEnsured,
 } from "../lib/template.js";
+import {
+  ACCOUNTANT_BLOCKS,
+  applyAccountantNext,
+  applyAccountantStatic,
+} from "../lib/preset.js";
 
 /* scaffold_project — новый проект-прототип. Два стека (выбор — ЗА
    ПОЛЬЗОВАТЕЛЕМ, агент обязан спросить, см. proto://knowledge/stack-choice):
@@ -65,6 +70,8 @@ interface ScaffoldArgs {
   dashboards: string[];
   feats: Features;
   installFonts: boolean;
+  preset?: "accountant";
+  presetBlocks: readonly string[];
 }
 
 /* уникальные slug'и дашбордов: первый — роут/страница по умолчанию */
@@ -172,6 +179,13 @@ async function generateNext(projectDir: string, a: ScaffoldArgs, r: Report) {
     }
   }
 
+  // пресет наполнения — на ПЕРВЫЙ дашборд
+  if (a.preset === "accountant") {
+    if (!a.feats.chrome) r.add("⚠ пресет рассчитан на chrome (сайдбар+шапка) — включи features.chrome");
+    const firstComp = componentName(dashSlugs(a.dashboards)[0].slug);
+    r.addAll(applyAccountantNext(projectDir, firstComp, a.presetBlocks));
+  }
+
   r.add("");
   r.add(`Запуск: cd ${a.name} && npm install && npm run dev`);
 }
@@ -234,6 +248,12 @@ async function generateStatic(projectDir: string, a: ScaffoldArgs, r: Report) {
   }
   fs.mkdirSync(path.join(projectDir, "assets/figma"), { recursive: true });
 
+  // пресет наполнения — на первую страницу (index.html)
+  if (a.preset === "accountant") {
+    if (!a.feats.chrome) r.add("⚠ пресет рассчитан на chrome (сайдбар+шапка) — включи features.chrome");
+    r.addAll(applyAccountantStatic(projectDir, "index.html", a.presetBlocks));
+  }
+
   r.add("");
   r.add(`Запуск: cd ${a.name} && python3 scripts/serve.py (http://localhost:8000)`);
   r.add("Вёрстка прямо в html/styles/app.css — без сборки, F5 показывает правки.");
@@ -286,9 +306,21 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
           .boolean()
           .default(true)
           .describe("сразу установить шрифты core-ds (default true)"),
+        preset: z
+          .enum(["accountant"])
+          .optional()
+          .describe(
+            "готовое наполнение ПЕРВОГО дашборда: accountant = главная «Бухгалтера» " +
+              "(быстрые действия, баланс, дела в работе, баннеры, табло, лента операций) — " +
+              "byte-perfect из проверенного прототипа, собирается мгновенно"
+          ),
+        presetBlocks: z
+          .array(z.enum(["quick-actions", "row1", "tablo", "feed"]))
+          .optional()
+          .describe("какие блоки пресета взять (default: все, в канонном порядке)"),
       },
     },
-    async ({ stack, name, title, dashboards, features, installFonts }) => {
+    async ({ stack, name, title, dashboards, features, installFonts, preset, presetBlocks }) => {
       const a: ScaffoldArgs = {
         name,
         title: title ?? name,
@@ -300,10 +332,14 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
           chrome: features?.chrome ?? true,
         },
         installFonts: installFonts ?? true,
+        preset,
+        presetBlocks: presetBlocks?.length
+          ? ACCOUNTANT_BLOCKS.filter((b) => presetBlocks.includes(b)) // канонный порядок
+          : ACCOUNTANT_BLOCKS,
       };
       const generate = stack === "static" ? generateStatic : generateNext;
       const r = new Report();
-      r.add(`# scaffold_project: ${a.name} (стек: ${stack})`);
+      r.add(`# scaffold_project: ${a.name} (стек: ${stack}${preset ? `, пресет: ${preset}` : ""})`);
       r.add(
         `Фичи: ${Object.entries(a.feats).map(([k, v]) => `${k}=${v ? "on" : "off"}`).join(", ")}, шрифты=${a.installFonts ? "да" : "нет"}`
       );

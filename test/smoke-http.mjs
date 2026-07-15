@@ -133,6 +133,20 @@ try {
   const badProc = await fetch(`${BASE}/process`, { method: "POST", body: "x" });
   check("process без суффикса → 404", badProc.status === 404);
 
+  // ── register_dashboard + preset (http): тарбол через /dl ──
+  const rp = await rpc(
+    "tools/call",
+    { name: "register_dashboard", arguments: { name: "Бухгалтер", route: "/buh", preset: "accountant" } },
+    7
+  );
+  const rpText = text(rp);
+  const rpUrl = rpText.match(/curl -fsS -o dash\.tgz "([^"]+)"/)?.[1];
+  check("register_dashboard preset (http): /dl-тарбол", Boolean(rpUrl), rpText.slice(0, 200));
+  if (rpUrl) {
+    const t = await fetch(rpUrl);
+    check("  тарбол пресета скачивается", t.ok && (await t.arrayBuffer()).byteLength > 50000);
+  }
+
   // ── extract_tokens: отдаёт контент, не пишет файлы ──
   const tok = await rpc(
     "tools/call",

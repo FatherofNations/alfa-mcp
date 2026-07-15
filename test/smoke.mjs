@@ -196,6 +196,31 @@ try {
   check("register_dashboard (static)", !regStatic.isError && fs.existsSync(path.join(sproj, "accountant.html")), text(regStatic).slice(0, 200));
   check("  новая страница наследует хром", fs.readFileSync(path.join(sproj, "accountant.html"), "utf8").includes("chrome-side"));
 
+  // ── пресет accountant: static-скаффолд с готовой главной ──
+  const accS = await rpc("tools/call", {
+    name: "scaffold_project",
+    arguments: { stack: "static", name: "acc-static", preset: "accountant", installFonts: false },
+  });
+  check("scaffold static + preset accountant", !accS.isError, text(accS).slice(0, 300));
+  const aproj = path.join(tmp, "acc-static");
+  const accHtml = fs.readFileSync(path.join(aproj, "index.html"), "utf8");
+  check("  блоки на странице", accHtml.includes("cur-qa") && accHtml.includes("cur-balance") && accHtml.includes("cur-tablo") && accHtml.includes("cur-table"));
+  check("  заглушка заменена, body.cur", !accHtml.includes("demo-grid") && accHtml.includes('<body class="cur">'));
+  check("  css + ассеты пресета", fs.existsSync(path.join(aproj, "styles/accountant.css")) && fs.existsSync(path.join(aproj, "assets/accountant/curBalPlus.svg")));
+  check("  относительные пути в css", fs.readFileSync(path.join(aproj, "styles/accountant.css"), "utf8").includes("url(../assets/accountant/"));
+  check("  относительные src в html", accHtml.includes('src="assets/accountant/') && !accHtml.includes('src="/assets/accountant/'));
+
+  // ── пресет accountant: register_dashboard в next-проект ──
+  const accN = await rpc("tools/call", {
+    name: "register_dashboard",
+    arguments: { name: "Бухгалтер", route: "/buh", targetDir: "panel-proto", preset: "accountant" },
+  });
+  check("register_dashboard + preset (next)", !accN.isError, text(accN).slice(0, 300));
+  const pn = path.join(tmp, "panel-proto");
+  check("  компонент-пресет + партиал", fs.readFileSync(path.join(pn, "components/dashboards/Buh.tsx"), "utf8").includes("ACCOUNTANT_HTML") && fs.existsSync(path.join(pn, "components/dashboards/accountantHtml.ts")));
+  check("  css + ассеты (next)", fs.existsSync(path.join(pn, "styles/accountant.css")) && fs.existsSync(path.join(pn, "public/assets/accountant/curTblRub.svg")));
+  check("  карточка в реестре", fs.readFileSync(path.join(pn, "lib/dashboards.ts"), "utf8").includes('"/buh"'));
+
   // ── register_dashboard ──
   const regDash = await rpc("tools/call", {
     name: "register_dashboard",

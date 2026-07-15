@@ -11,6 +11,7 @@ COPY src ./src
 COPY knowledge ./knowledge
 COPY template ./template
 COPY template-static ./template-static
+COPY blocks ./blocks
 COPY brand ./brand
 RUN npm run build
 

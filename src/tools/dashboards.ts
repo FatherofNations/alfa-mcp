@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { STATIC_TEMPLATE_DIR, TEMPLATE_DIR, resolveInProject } from "../lib/paths.js";
@@ -11,6 +13,7 @@ import {
   componentName,
   writeFileEnsured,
 } from "../lib/template.js";
+import { ACCOUNTANT_BLOCKS, applyAccountantNext, applyAccountantStatic } from "../lib/preset.js";
 
 /* register_dashboard — новый дашборд в существующий проект: роут,
    компонент-заготовка; при включённой панели tools — карточка в реестре
@@ -42,7 +45,9 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
       title: "Новый дашборд в проект",
       description:
         "Создаёт app/<route>/page.tsx + компонент-заготовку; если в проекте есть " +
-        "панель tools — добавляет карточку в реестр (свопы/deep-links сами).",
+        "панель tools — добавляет карточку в реестр (свопы/deep-links сами). " +
+        "preset: accountant — вместо заготовки сразу готовая главная «Бухгалтера» " +
+        "(в командном режиме пресет доступен для next; static — через scaffold_project).",
       inputSchema: {
         name: z.string().min(1).describe("имя дашборда (заголовок страницы/карточки)"),
         route: z
@@ -52,15 +57,50 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         cardTitle: z.string().optional().describe("заголовок карточки в панели (default = name)"),
         cardSubtitle: z.string().default("Прототип").describe("подзаголовок карточки"),
         targetDir: z.string().default(".").describe("корень проекта-прототипа"),
+        preset: z
+          .enum(["accountant"])
+          .optional()
+          .describe("готовое наполнение вместо заготовки (главная «Бухгалтера»)"),
+        presetBlocks: z
+          .array(z.enum(["quick-actions", "row1", "tablo", "feed"]))
+          .optional()
+          .describe("какие блоки пресета взять (default: все)"),
       },
     },
-    async ({ name, route, cardTitle, cardSubtitle, targetDir }) => {
+    async ({ name, route, cardTitle, cardSubtitle, targetDir, preset, presetBlocks }) => {
+      const blocks = presetBlocks?.length
+        ? ACCOUNTANT_BLOCKS.filter((b) => presetBlocks.includes(b))
+        : ACCOUNTANT_BLOCKS;
       const title = cardTitle ?? name;
       const entry = `  { id: "${route.slice(1)}", route: "${route}", title: "${title}", subtitle: "${cardSubtitle}" },`;
 
       if (ctx.mode === "http") {
-        // файлов агента не видим — отдаём контент файлов и точную правку
         const { slug, comp, page, dash } = renderFiles(name, route, true);
+
+        // пресет: файлов много (компонент + css + 27 ассетов) — тарбол через /dl
+        if (preset === "accountant") {
+          const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pf-dash-"));
+          writeFileEnsured(path.join(tmp, `app/${slug}/page.tsx`), page);
+          const applied = applyAccountantNext(tmp, comp, blocks);
+          const tgz = path.join(tmp, `${slug}-preset.tgz`);
+          execFileSync("tar", ["-C", tmp, "-czf", tgz, "app", "components", "styles", "public"]);
+          const url = ctx.publish(tgz, `${slug}-preset.tgz`);
+          const r = new Report();
+          r.add(`# register_dashboard «${name}» → ${route} (пресет accountant, next-стек)`);
+          r.addAll(applied);
+          r.add("");
+          r.add("## Развернуть (выполни в КОРНЕ проекта)");
+          r.add("```bash");
+          r.add(`curl -fsS -o dash.tgz "${url}" && tar xzf dash.tgz && rm dash.tgz`);
+          r.add("```");
+          r.add("Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД маркером `/* proto-forge:dashboards */`:");
+          r.add("```ts");
+          r.add(entry);
+          r.add("```");
+          return r.toResult();
+        }
+
+        // файлов агента не видим — отдаём контент файлов и точную правку
         const r = new Report();
         r.add(`# register_dashboard «${name}» → ${route} (командный режим)`);
         r.add("");
@@ -108,6 +148,9 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         writeFileEnsured(htmlPath, html);
         const r = new Report();
         r.add(`✓ ${slug}.html — страница «${name}» (static-стек)`);
+        if (preset === "accountant") {
+          r.addAll(applyAccountantStatic(root, `${slug}.html`, blocks));
+        }
         r.add(`Открывается по http://localhost:8000/${slug}.html; ссылки между страницами добавь в разметке.`);
         return r.toResult();
       }
@@ -127,7 +170,9 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
       r.add(`✓ app/${slug}/page.tsx (роут ${route})`);
 
       const compPath = path.join(root, `components/dashboards/${comp}.tsx`);
-      if (!fs.existsSync(compPath)) {
+      if (preset === "accountant") {
+        r.addAll(applyAccountantNext(root, comp, blocks));
+      } else if (!fs.existsSync(compPath)) {
         writeFileEnsured(compPath, dash);
         r.add(`✓ components/dashboards/${comp}.tsx (заготовка)`);
       } else {

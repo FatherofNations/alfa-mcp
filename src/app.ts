@@ -41,7 +41,7 @@ export function buildServer(ctx: ServerCtx): McpServer {
     {
       name: "proto-forge",
       title: "proto-forge — прототипы Альфа-Бизнеса",
-      version: "0.4.0",
+      version: "0.5.0",
       icons: serverIcons(ctx),
       websiteUrl: "https://github.com/FatherofNations/proto-forge",
     },
