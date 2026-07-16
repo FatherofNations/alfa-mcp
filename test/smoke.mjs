@@ -213,7 +213,7 @@ try {
   const accCss = fs.readFileSync(path.join(aproj, "styles/accountant.css"), "utf8");
   check("  относительные пути в css", accCss.includes("url(../assets/accountant/"));
   check("  относительные src в html", accHtml.includes('src="assets/accountant/') && !accHtml.includes('src="/assets/accountant/'));
-  check("  контент прибит влево (без margin:0 auto)", !/margin:\s*0\s+auto/.test(accCss));
+  check("  контент центрирован, max-width 1248", accCss.includes("max-width: 1248px") && /\.cur-content[^}]*margin:\s*0\s+auto/.test(accCss));
 
   // ── пресет accountant: register_dashboard в next-проект ──
   const accN = await rpc("tools/call", {

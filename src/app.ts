@@ -41,7 +41,7 @@ export function buildServer(ctx: ServerCtx): McpServer {
     {
       name: "proto-forge",
       title: "proto-forge — прототипы Альфа-Бизнеса",
-      version: "0.6.0",
+      version: "0.6.1",
       icons: serverIcons(ctx),
       websiteUrl: "https://github.com/FatherofNations/proto-forge",
     },
@@ -64,7 +64,8 @@ process_assets, НИКОГДА не кропить из get_screenshot (это �
 Панель tools — ТОЛЬКО next и ТОЛЬКО по явной просьбе. Если проект уже
 static, а нужна панель — НЕ мигрируй сам на next: объясни, что панель
 требует react-сборки, и спроси явное подтверждение на миграцию.
-Хром: контент верстать flush-left на всю ширину, страницу не центрировать.
+Хром: контент страницы центрировать между сайдбаром и правым краем
+браузера, max-width 1248 (на широких экранах поля растут симметрично).
 Чек-лист перед сдачей стадии: get_checklist.`,
     }
   );

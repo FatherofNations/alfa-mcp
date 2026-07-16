@@ -10,11 +10,12 @@ body.cur { min-width: 1600px; }
 /* margin явно сбрасываем: в styles.css есть голое правило `main { margin-right:88px }` (v1) */
 .cur-main { margin: 0 0 0 248px; padding-top: 56px; /* хром: сайдбар 248 + шапка 56 */ }
 .cur-content {
-  width: 1352px;   /* фикс: контентная колонка 1248 + поля 52 */
-  /* прибито влево, вплотную к сайдбару — на широких экранах слева нет
-     пустой серой полосы (на 1600 занимает весь остаток, byte-perfect). */
-  margin: 0;
-  padding: 24px 52px 140px;
+  /* контентная колонка макета — max 1248, центрируется в остатке справа
+     от сайдбара (от меню слева до правого края браузера). На широких
+     экранах поля растут симметрично; на 1600 поля по 52 — byte-perfect. */
+  max-width: 1248px;
+  margin: 0 auto;
+  padding: 24px 0 140px;
   /* контентная типографика дашборда — системный SF Pro (как в макете) */
   --font-sf: -apple-system, 'SF Pro Text', 'SF Pro Display', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
