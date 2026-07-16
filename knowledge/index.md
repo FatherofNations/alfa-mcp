@@ -6,7 +6,7 @@
 | Ресурс | Когда читать |
 |---|---|
 | `proto://knowledge/stack-choice` | ПЕРВЫМ, перед scaffold_project: спросить пользователя про стек (static/next), критерии и практики |
-| `proto://knowledge/figma-import` | перед разбором макета: выгрузка данных/ассетов из Figma, все грабли |
+| `proto://knowledge/figma-import` | перед разбором макета: выгрузка данных/ассетов из Figma, все грабли; нет данных из MCP → СТОП, спросить пользователя |
 | `proto://knowledge/pixel-perfect` | перед вёрсткой: методика точного переноса, бленд-диффы |
 | `proto://knowledge/animation-canon` | перед любым моушеном: канонические кривые/тайминги, 12 рецептов |
 | `proto://knowledge/react-patterns` | перенос статики в Next.js: партиалы, StrictMode, оверлеи |

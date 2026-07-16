@@ -9,6 +9,7 @@ const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
   import: {
     doc: "proto://knowledge/figma-import",
     items: [
+      "Figma MCP отвечает; если нет — СТОП: спросить пользователя и порекомендовать включить MCP, по скриншоту верстать только с явного согласия",
       "get_metadata по фрейму свежий (node-id из старых сессий не использовать)",
       "design context собран по под-узлам (лимит ~25k токенов — ничего не обрезано)",
       "get_variable_defs снят и передан в extract_tokens",

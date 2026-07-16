@@ -66,6 +66,11 @@ try {
   });
   check("initialize", init.serverInfo?.name === "proto-forge");
   check(
+    "инструкции: нет данных из Figma MCP → спросить пользователя",
+    init.instructions?.includes("СТОП: не верстать по скриншоту молча") &&
+      init.instructions?.includes("порекомендовать включить Figma MCP")
+  );
+  check(
     "иконка коннектора (stdio: data-URI)",
     init.serverInfo?.icons?.[0]?.src?.startsWith("data:image/svg+xml;base64,")
   );
@@ -89,12 +94,20 @@ try {
   check("resources/read animation-canon", canon.contents[0].text.includes("cubic-bezier(0.32, 0.72, 0, 1)"));
   const fimport = await rpc("resources/read", { uri: "proto://knowledge/figma-import" });
   check("figma-import: быстрый пайплайн, без токенов", fimport.contents[0].text.includes("process_assets") && !fimport.contents[0].text.includes("import_figma_assets"));
+  check(
+    "figma-import: правило №2 (нет MCP → стоп + спросить + рекомендовать)",
+    fimport.contents[0].text.includes("Правило №2") &&
+      fimport.contents[0].text.includes("не переключаться\nмолча на вёрстку по скриншоту") &&
+      fimport.contents[0].text.includes("Порекомендовать включить Figma MCP")
+  );
   const prompts = await rpc("prompts/list");
   check("prompts/list = 5", prompts.prompts.length === 5, `получено ${prompts.prompts.length}`);
 
   // ── get_checklist / add_animation ──
   const cl = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "qa" } });
   check("get_checklist(qa)", text(cl).includes("naturalWidth"));
+  const clImport = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "import" } });
+  check("get_checklist(import): нет Figma MCP → спросить", text(clImport).includes("СТОП: спросить пользователя"));
   const anim = await rpc("tools/call", {
     name: "add_animation",
     arguments: { recipe: "stagger", selector: ".feed", params: { items: 4 } },

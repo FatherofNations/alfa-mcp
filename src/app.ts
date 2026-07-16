@@ -41,7 +41,7 @@ export function buildServer(ctx: ServerCtx): McpServer {
     {
       name: "proto-forge",
       title: "proto-forge — прототипы Альфа-Бизнеса",
-      version: "0.6.1",
+      version: "0.6.2",
       icons: serverIcons(ctx),
       websiteUrl: "https://github.com/FatherofNations/proto-forge",
     },
@@ -57,6 +57,12 @@ export function buildServer(ctx: ServerCtx): McpServer {
 Перед задачей читай гайд: начни с proto://knowledge/index.
 Типовой старт: (вопрос про стек) → scaffold_project (шрифты ставятся
 сразу) → extract_tokens → download_assets → process_assets → вёрстка.
+ЕСЛИ FIGMA MCP НЕ ОТДАЛ ДАННЫЕ (не подключён, ошибка, нет доступа) —
+СТОП: не верстать по скриншоту молча. Сказать пользователю причину,
+порекомендовать включить Figma MCP (точные значения, переменные, экспорт
+ассетов — качество заметно выше) и спросить: подождать подключения или
+верстать по скриншоту с потерей точности. По скриншоту — только после
+явного «да», с записью в «осознанные отступления».
 АССЕТЫ (карты, фото, иконки, иллюстрации) — всегда download_assets +
 process_assets, НИКОГДА не кропить из get_screenshot (это долго и мыльно;
 порядок — proto://knowledge/figma-import). Флаги/валюты/мультицвет
