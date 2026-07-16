@@ -193,7 +193,11 @@ async function generateNext(projectDir: string, a: ScaffoldArgs, r: Report) {
 /* ── static-стек: HTML/CSS/JS без сборки ── */
 async function generateStatic(projectDir: string, a: ScaffoldArgs, r: Report) {
   if (a.feats.toolsPanel) {
-    r.add("⚠ панель tools доступна только в next-стеке — пропущена (нужна панель → пересоздай с stack: next)");
+    r.add(
+      "⚠ панель tools доступна ТОЛЬКО в next-стеке — пропущена. НЕ мигрируй проект " +
+        "на next сам: объясни пользователю, что панель требует react-сборки, и спроси " +
+        "явное подтверждение на пересоздание с stack: next."
+    );
   }
   const vars = { PROJECT_NAME: a.name, PROJECT_TITLE: a.title };
   const skip: string[] = [];

@@ -1,7 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import { sanitizeSvg } from "./svg.js";
-import { analyzePng, floodFillClean, getSharp, roundedMask, toWebpIfSmaller } from "./images.js";
+import { hasEmbeddedRaster, resolveSvgVars, sanitizeSvg } from "./svg.js";
+import {
+  analyzePng,
+  floodFillClean,
+  getSharp,
+  rasterizeSvg,
+  roundedMask,
+  toWebpIfSmaller,
+} from "./images.js";
 
 /* Пост-процессинг папки ассетов, скачанных официальным Figma MCP
    (download_assets). Одна операция на всю папку — ключ к скорости:
@@ -17,6 +24,7 @@ export interface ProcessOptions {
   webp?: boolean; // default true
   cleanBackground?: string[]; // basenames (без расширения) для flood-fill
   rounded?: { file: string; radius: number }[]; // basenames для маски
+  rasterize?: string[]; // basenames SVG → PNG @2× (флаги/валюты/иллюстрации)
 }
 
 export async function processAssetsDir(
@@ -26,6 +34,7 @@ export async function processAssetsDir(
   const report: string[] = [];
   const webp = opts.webp !== false;
   const cleanSet = new Set((opts.cleanBackground ?? []).map((n) => n.replace(/\.\w+$/, "")));
+  const rasterSet = new Set((opts.rasterize ?? []).map((n) => n.replace(/\.\w+$/, "")));
   const roundedMap = new Map(
     (opts.rounded ?? []).map((r) => [r.file.replace(/\.\w+$/, ""), r.radius])
   );
@@ -41,7 +50,39 @@ export async function processAssetsDir(
     const ext = path.extname(file).toLowerCase();
 
     if (ext === ".svg") {
-      const { svg, changes, warnings } = sanitizeSvg(fs.readFileSync(p, "utf8"));
+      const raw = fs.readFileSync(p, "utf8");
+      // условия SVG → PNG: имя в списке rasterize ИЛИ встроенный растр
+      // (<image> — флаг/фото, запечённый в svg; как SVG бессмысленно).
+      const embedded = hasEmbeddedRaster(raw);
+      if (rasterSet.has(base) || embedded) {
+        try {
+          // резолвим var() до растеризации — librsvg их не понимает
+          const resolved = resolveSvgVars(raw).svg;
+          const rast = await rasterizeSvg(Buffer.from(resolved, "utf8"), 2);
+          if (rast) {
+            let buf = rast.png;
+            let ext2 = "png";
+            let note = `растеризован → ${base}.png @2× (${rast.width}×${rast.height}${embedded ? ", встроенный растр" : ""})`;
+            if (webp) {
+              const w = await toWebpIfSmaller(buf);
+              if (w) {
+                buf = w;
+                ext2 = "webp";
+                note += ` → webp (${(w.length / 1024).toFixed(1)} KB)`;
+              }
+            }
+            fs.writeFileSync(path.join(dir, `${base}.${ext2}`), buf);
+            fs.unlinkSync(p);
+            report.push(`✓ ${file} — ${note}`);
+            continue;
+          }
+          report.push(`⚠ ${file}: sharp недоступен — растеризация пропущена, оставлен SVG`);
+        } catch (e) {
+          report.push(`✗ ${file}: растеризация не удалась (${e instanceof Error ? e.message : e}) — оставлен SVG`);
+        }
+        // если растеризация не сработала — падаем в обычную санитацию ниже
+      }
+      const { svg, changes, warnings } = sanitizeSvg(raw);
       if (changes.length) fs.writeFileSync(p, svg, "utf8");
       report.push(`${changes.length ? "✓" : "•"} ${file}${changes.length ? ` — ${changes.join("; ")}` : " — чисто"}`);
       warnings.forEach((w) => report.push(`  ⚠ ${w}`));

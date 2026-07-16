@@ -114,10 +114,15 @@ try {
     path.join(assets, "icon.svg"),
     '<svg viewBox="0 0 24 24"><path fill="var(--fill-0, #EF3124)" d="M4 4h16"/></svg>'
   );
+  // флаг → форсим растеризацию через query ?raster=flag
+  fs.writeFileSync(
+    path.join(assets, "flag.svg"),
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="var(--fill-0, #3C3B6E)"/></svg>'
+  );
   const inTgz = path.join(tmp, "in.tgz");
   execFileSync("tar", ["-C", assets, "-czf", inTgz, "."]);
   const suffix = "-" + crypto.createHash("sha256").update(TOKEN).digest("hex").slice(0, 16);
-  const procRes = await fetch(`${BASE}/process${suffix}`, {
+  const procRes = await fetch(`${BASE}/process${suffix}?raster=flag`, {
     method: "POST",
     headers: { "Content-Type": "application/gzip" },
     body: fs.readFileSync(inTgz),
@@ -129,6 +134,11 @@ try {
   fs.mkdirSync(outDir);
   execFileSync("tar", ["xzf", outTgz, "-C", outDir]);
   check("process: svg почищен", fs.readFileSync(path.join(outDir, "icon.svg"), "utf8").includes('fill="#EF3124"'));
+  check(
+    "process: флаг растеризован (raster=)",
+    (fs.existsSync(path.join(outDir, "flag.webp")) || fs.existsSync(path.join(outDir, "flag.png"))) &&
+      !fs.existsSync(path.join(outDir, "flag.svg"))
+  );
   check("process: _report.txt внутри", fs.existsSync(path.join(outDir, "_report.txt")));
   const badProc = await fetch(`${BASE}/process`, { method: "POST", body: "x" });
   check("process без суффикса → 404", badProc.status === 404);

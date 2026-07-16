@@ -115,6 +115,40 @@ export async function roundedMask(buf: Buffer, radius: number): Promise<Buffer |
     .toBuffer();
 }
 
+/* Растеризация SVG → PNG (для флагов/валют/иллюстраций, которые в <img>
+   встают криво или не масштабируются: мультицвет, маски, встроенный растр).
+   Рендерим в scale× от размеров viewBox (по умолчанию 2×) — чётко на
+   ретине. var() в svg надо резолвить ДО вызова (librsvg их не понимает). */
+export async function rasterizeSvg(
+  svg: Buffer,
+  scale = 2
+): Promise<{ png: Buffer; width: number; height: number } | null> {
+  const sharp = await getSharp();
+  if (!sharp) return null;
+  const src = svg.toString("utf8");
+  // размер: viewBox="minx miny w h" → берём w,h; иначе width/height; иначе 24
+  let w = 24;
+  let h = 24;
+  const vb = src.match(/viewBox="\s*[\d.eE+-]+\s+[\d.eE+-]+\s+([\d.eE+-]+)\s+([\d.eE+-]+)/);
+  if (vb) {
+    w = parseFloat(vb[1]) || w;
+    h = parseFloat(vb[2]) || h;
+  } else {
+    const wa = src.match(/\bwidth="([\d.]+)/);
+    const ha = src.match(/\bheight="([\d.]+)/);
+    if (wa) w = parseFloat(wa[1]) || w;
+    if (ha) h = parseFloat(ha[1]) || h;
+  }
+  const tw = Math.max(1, Math.round(w * scale));
+  const th = Math.max(1, Math.round(h * scale));
+  // высокая density + точный resize = детерминированный чёткий растр
+  const png = await sharp(svg, { density: Math.round(96 * scale) })
+    .resize(tw, th, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+  return { png, width: tw, height: th };
+}
+
 /* Lossless WebP; вернёт null, если WebP не меньше исходного PNG. */
 export async function toWebpIfSmaller(png: Buffer): Promise<Buffer | null> {
   const sharp = await getSharp();

@@ -19,10 +19,12 @@ export function registerAssets(server: McpServer, ctx: ServerCtx) {
       title: "Пост-процессинг ассетов из Figma",
       description:
         "Обрабатывает ВСЮ папку ассетов, скачанных download_assets (Figma MCP), " +
-        "одной операцией: SVG — санитайзер (CSS-переменные → цвет, фоновые path); " +
-        "PNG — детект пустых экспортов, опц. flood-fill чистка фона и rounded-маска " +
-        "(по именам файлов), lossless WebP если меньше. Вызывай СРАЗУ после " +
-        "download_assets, до вёрстки (webp переименовывает файлы).",
+        "одной операцией: SVG — санитайзер (CSS-переменные → цвет, фоновые path), " +
+        "растеризация в PNG @2× по условию (флаги/валюты/иллюстрации в rasterize + " +
+        "авто для svg со встроенным растром <image>); PNG — детект пустых экспортов, " +
+        "опц. flood-fill чистка фона и rounded-маска (по именам файлов), lossless WebP " +
+        "если меньше. Вызывай СРАЗУ после download_assets, до вёрстки (webp/растеризация " +
+        "переименовывают файлы).",
       inputSchema: {
         dir: z
           .string()
@@ -37,16 +39,25 @@ export function registerAssets(server: McpServer, ctx: ServerCtx) {
           .array(z.object({ file: z.string(), radius: z.number() }))
           .default([])
           .describe("png-файлы для rounded-rect маски (запечённые углы секции)"),
+        rasterize: z
+          .array(z.string())
+          .default([])
+          .describe(
+            "имена SVG-файлов (без расширения) → растеризовать в PNG @2×: флаги/валюты/" +
+              "мультицветные иллюстрации, которые в <img> встают криво или не масштабируются " +
+              "(монохромные иконки-маски оставляй SVG). SVG со встроенным <image> конвертятся авто"
+          ),
       },
     },
-    async ({ dir, webp, cleanBackground, rounded }) => {
-      const opts = { webp, cleanBackground, rounded };
+    async ({ dir, webp, cleanBackground, rounded, rasterize }) => {
+      const opts = { webp, cleanBackground, rounded, rasterize };
       if (ctx.mode === "http") {
         // файлов агента не видим — round-trip папки через /process (один curl)
         const q = new URLSearchParams();
         if (webp === false) q.set("webp", "0");
         if (cleanBackground?.length) q.set("clean", cleanBackground.join(","));
         if (rounded?.length) q.set("round", rounded.map((r) => `${r.file}:${r.radius}`).join(","));
+        if (rasterize?.length) q.set("raster", rasterize.join(","));
         const url = `${ctx.processUrl}${q.size ? `?${q}` : ""}`;
         const d = dir ?? "public/assets/figma";
         return ok([

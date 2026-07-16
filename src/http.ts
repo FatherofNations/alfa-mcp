@@ -152,6 +152,7 @@ export function startHttp(port: number) {
                   return { file, radius: Number(radius) || 12 };
                 })
               : [],
+          rasterize: typeof q.raster === "string" && q.raster ? q.raster.split(",") : [],
         };
         const report = await processAssetsDir(work, opts);
         fs.writeFileSync(path.join(work, "_report.txt"), report.join("\n") + "\n", "utf8");

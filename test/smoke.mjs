@@ -186,7 +186,10 @@ try {
   check("  html: заголовок и mobile-gate", indexHtml.includes("<h1 class=\"page-title\">Главная</h1>") && indexHtml.includes("mgate"));
   check("  html: маркеры вычищены", !/proto:(if|else|endif)/.test(indexHtml));
   check("  html: хром (сайдбар+шапка) на странице", indexHtml.includes("chrome-side") && indexHtml.includes("chrome-header") && fs.existsSync(path.join(sproj, "assets/chrome/logo.svg")));
-  check("  предупреждение про панель в static", ssOut.includes("панель tools доступна только в next"));
+  check(
+    "  предупреждение про панель в static",
+    ssOut.includes("панель tools доступна ТОЛЬКО в next") && ssOut.includes("НЕ мигрируй")
+  );
 
   // register_dashboard в static-проект → новая html-страница (наследует хром)
   const regStatic = await rpc("tools/call", {
@@ -207,8 +210,10 @@ try {
   check("  блоки на странице", accHtml.includes("cur-qa") && accHtml.includes("cur-balance") && accHtml.includes("cur-tablo") && accHtml.includes("cur-table"));
   check("  заглушка заменена, body.cur", !accHtml.includes("demo-grid") && accHtml.includes('<body class="cur">'));
   check("  css + ассеты пресета", fs.existsSync(path.join(aproj, "styles/accountant.css")) && fs.existsSync(path.join(aproj, "assets/accountant/curBalPlus.svg")));
-  check("  относительные пути в css", fs.readFileSync(path.join(aproj, "styles/accountant.css"), "utf8").includes("url(../assets/accountant/"));
+  const accCss = fs.readFileSync(path.join(aproj, "styles/accountant.css"), "utf8");
+  check("  относительные пути в css", accCss.includes("url(../assets/accountant/"));
   check("  относительные src в html", accHtml.includes('src="assets/accountant/') && !accHtml.includes('src="/assets/accountant/'));
+  check("  контент прибит влево (без margin:0 auto)", !/margin:\s*0\s+auto/.test(accCss));
 
   // ── пресет accountant: register_dashboard в next-проект ──
   const accN = await rpc("tools/call", {
@@ -245,11 +250,31 @@ try {
     .png().toFile(path.join(assetsDir, "solid.png"));
   await sharp({ create: { width: 32, height: 32, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
     .png().toFile(path.join(assetsDir, "empty.png"));
-  const pa = await rpc("tools/call", { name: "process_assets", arguments: { dir: "assets" } });
+  // флаг с var() — форсим растеризацию по имени; var резолвится ДО (цвет не чернеет)
+  fs.writeFileSync(
+    path.join(assetsDir, "flag.svg"),
+    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="12" cy="12" r="12" fill="var(--fill-0, #3C3B6E)"/>' +
+      '<rect x="2" y="10" width="20" height="4" fill="#B22234"/></svg>'
+  );
+  // svg со встроенным растром — растеризуется АВТОМАТИЧЕСКИ
+  fs.writeFileSync(
+    path.join(assetsDir, "embed.svg"),
+    '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" width="16" height="16"/></svg>'
+  );
+  const pa = await rpc("tools/call", { name: "process_assets", arguments: { dir: "assets", rasterize: ["flag"] } });
   const paText = text(pa);
   check("process_assets: svg почищен", fs.readFileSync(path.join(assetsDir, "icon.svg"), "utf8").includes('fill="#EF3124"'));
   check("process_assets: png → webp", fs.existsSync(path.join(assetsDir, "solid.webp")) && !fs.existsSync(path.join(assetsDir, "solid.png")));
   check("process_assets: пустой экспорт пойман", paText.includes("ПУСТОЙ") && fs.existsSync(path.join(assetsDir, "empty.png")));
+  const flagOut = fs.existsSync(path.join(assetsDir, "flag.webp")) || fs.existsSync(path.join(assetsDir, "flag.png"));
+  check("process_assets: флаг растеризован (svg удалён)", flagOut && !fs.existsSync(path.join(assetsDir, "flag.svg")), paText);
+  const embedOut = fs.existsSync(path.join(assetsDir, "embed.webp")) || fs.existsSync(path.join(assetsDir, "embed.png"));
+  check("process_assets: встроенный растр авто-растеризован", embedOut && !fs.existsSync(path.join(assetsDir, "embed.svg")), paText);
+  // цвет флага корректен (var зарезолвлен, не чёрный): есть navy-подобный пиксель
+  const flagFile = fs.existsSync(path.join(assetsDir, "flag.webp")) ? "flag.webp" : "flag.png";
+  const flagStat = await sharp(path.join(assetsDir, flagFile)).stats();
+  check("process_assets: цвет флага сохранён (не чёрный)", flagStat.channels[2].max > 60, `blueMax=${flagStat.channels[2]?.max}`);
 
   // ── sanitize_svg: inline-режим ──
   const san = await rpc("tools/call", {

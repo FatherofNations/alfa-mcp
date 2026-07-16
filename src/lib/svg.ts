@@ -12,24 +12,39 @@ export interface SvgSanitizeResult {
   warnings: string[];
 }
 
+/* Резолв Figma-переменных в конкретные цвета: var(--fill-N, fallback) →
+   fallback (атрибуты fill/stroke и style). Нужно и санитайзеру (в <img>
+   var() не работают), и растеризации (librsvg не резолвит CSS-переменные —
+   без этого цвета «схлопнутся» в чёрный/пусто). Возвращает изменённый svg
+   и число замен. */
+export function resolveSvgVars(src: string): { svg: string; count: number } {
+  let svg = src;
+  let count = 0;
+  const varRe = /(fill|stroke)="var\(--[\w-]+,\s*([^)"]+)\)"/g;
+  count += [...svg.matchAll(varRe)].length;
+  svg = svg.replace(varRe, '$1="$2"');
+  const styleVarRe = /(fill|stroke):\s*var\(--[\w-]+,\s*([^);"]+)\)/g;
+  count += [...svg.matchAll(styleVarRe)].length;
+  svg = svg.replace(styleVarRe, "$1:$2");
+  return { svg, count };
+}
+
+/* Встроенный растр внутри SVG (<image href="data:…">) — типично для
+   флагов/фото, запечённых дизайнером в svg. Такой файл бессмысленно
+   держать как SVG: это условие для растеризации в PNG. */
+export function hasEmbeddedRaster(src: string): boolean {
+  return /<image\b/i.test(src);
+}
+
 export function sanitizeSvg(src: string): SvgSanitizeResult {
   const changes: string[] = [];
   const warnings: string[] = [];
   let svg = src;
 
   // 1) var(--fill-N, fallback) → fallback (fill и stroke, атрибуты и style)
-  const varRe = /(fill|stroke)="var\(--[\w-]+,\s*([^)"]+)\)"/g;
-  const varCount = [...svg.matchAll(varRe)].length;
-  if (varCount > 0) {
-    svg = svg.replace(varRe, '$1="$2"');
-    changes.push(`fill/stroke var(…) → конкретный цвет: ${varCount} шт.`);
-  }
-  const styleVarRe = /(fill|stroke):\s*var\(--[\w-]+,\s*([^);"]+)\)/g;
-  const styleVarCount = [...svg.matchAll(styleVarRe)].length;
-  if (styleVarCount > 0) {
-    svg = svg.replace(styleVarRe, "$1:$2");
-    changes.push(`style-переменные → цвет: ${styleVarCount} шт.`);
-  }
+  const { svg: resolved, count: varCount } = resolveSvgVars(svg);
+  svg = resolved;
+  if (varCount > 0) changes.push(`fill/stroke var(…) → конкретный цвет: ${varCount} шт.`);
   // var без фолбэка — заменить нечем, предупреждаем
   if (/(?:fill|stroke)="var\([^)]*\)"/.test(svg)) {
     warnings.push("остались var(--…) БЕЗ фолбэка — в <img> элемент будет невидим, нужен ручной цвет");
