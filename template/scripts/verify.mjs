@@ -19,8 +19,9 @@ const bad = (m) => {
   console.error(`  ✗ ${m}`);
 };
 
-// ── роуты из реестра дашбордов ──
-const reg = fs.readFileSync(path.resolve("lib/dashboards.ts"), "utf8");
+// ── роуты из реестра дашбордов (реестра нет без панели tools — тогда только /) ──
+const regPath = path.resolve("lib/dashboards.ts");
+const reg = fs.existsSync(regPath) ? fs.readFileSync(regPath, "utf8") : "";
 const routes = [...reg.matchAll(/route:\s*"([^"]+)"/g)].map((m) => m[1]);
 if (routes.length === 0) routes.push("/");
 
@@ -96,7 +97,8 @@ if (chromium) {
       const open = await page.evaluate(() =>
         document.body.classList.contains("twk-open")
       );
-      open ? ok(`${route}: панель tools открывается`) : bad(`${route}: панель tools не открылась`);
+      if (open) ok(`${route}: панель tools открывается`);
+      else bad(`${route}: панель tools не открылась`);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
     }

@@ -15,8 +15,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* полный сброс UA-стилей кнопок: пресеты и вёрстка задают только свои
+   классы (cur-ftag, cur-bal-x, …) и рассчитывают, что рамки/фона нет */
 button {
   font-family: inherit;
+  appearance: none;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 /* ── заготовка дашборда (заменяется вёрсткой по макету) ──
