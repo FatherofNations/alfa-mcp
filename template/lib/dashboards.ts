@@ -9,7 +9,7 @@ export interface DashboardDef {
 }
 
 export const DASHBOARDS: DashboardDef[] = [
-  /* proto-forge:dashboards */
+  /* alfa-mcp:dashboards */
 ];
 
 export function dashboardByPath(pathname: string | null): DashboardDef {

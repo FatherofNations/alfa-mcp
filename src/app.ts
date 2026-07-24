@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ServerCtx } from "./lib/ctx.js";
-import { PKG_ROOT } from "./lib/paths.js";
+import { PKG_ROOT, PKG_VERSION } from "./lib/paths.js";
 import { registerResources } from "./resources.js";
 import { registerPrompts } from "./prompts.js";
 import { registerScaffold } from "./tools/scaffold.js";
@@ -39,22 +39,23 @@ function serverIcons(ctx: ServerCtx) {
 export function buildServer(ctx: ServerCtx): McpServer {
   const server = new McpServer(
     {
-      name: "proto-forge",
-      title: "proto-forge — прототипы Альфа-Бизнеса",
-      version: "0.6.2",
+      name: "alfa-mcp",
+      title: "Альфа — прототипы Альфа-Бизнеса",
+      version: PKG_VERSION,
       icons: serverIcons(ctx),
-      websiteUrl: "https://github.com/FatherofNations/proto-forge",
+      websiteUrl: "https://github.com/FatherofNations/alfa-mcp",
     },
     {
-      instructions: `proto-forge: экспертиза и автоматизация прототипов по Figma-макетам.
+      instructions: `alfa-mcp («Альфа»): экспертиза и автоматизация прототипов
+по Figma-макетам для Альфа-Бизнеса.
 Работает В ПАРЕ с официальным Figma MCP: данные и ассеты макета — оттуда
 (get_design_context / get_variable_defs / download_assets), обработка и
 каноны — отсюда. Токены Figma не нужны.
 ПЕРЕД scaffold_project ОБЯЗАТЕЛЬНО спроси пользователя, на чём собирать
 прототип (не выбирай сам): чистый HTML/CSS (static — максимальная
 скорость pixel-perfect) или React/Next.js (next — масштабируемость,
-панель tools, компоненты core-ds). Критерии: proto://knowledge/stack-choice.
-Перед задачей читай гайд: начни с proto://knowledge/index.
+панель tools, компоненты core-ds). Критерии: alfa://knowledge/stack-choice.
+Перед задачей читай гайд: начни с alfa://knowledge/index.
 Типовой старт: (вопрос про стек) → scaffold_project (шрифты ставятся
 сразу) → extract_tokens → download_assets → process_assets → вёрстка.
 ЕСЛИ FIGMA MCP НЕ ОТДАЛ ДАННЫЕ (не подключён, ошибка, нет доступа) —
@@ -65,7 +66,7 @@ export function buildServer(ctx: ServerCtx): McpServer {
 явного «да», с записью в «осознанные отступления».
 АССЕТЫ (карты, фото, иконки, иллюстрации) — всегда download_assets +
 process_assets, НИКОГДА не кропить из get_screenshot (это долго и мыльно;
-порядок — proto://knowledge/figma-import). Флаги/валюты/мультицвет
+порядок — alfa://knowledge/figma-import). Флаги/валюты/мультицвет
 растеризуй в PNG (process_assets rasterize), монохром оставляй SVG.
 Панель tools — ТОЛЬКО next и ТОЛЬКО по явной просьбе. Если проект уже
 static, а нужна панель — НЕ мигрируй сам на next: объясни, что панель

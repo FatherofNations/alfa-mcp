@@ -97,7 +97,7 @@ export async function processAssetsDir(
       if (analysis?.empty) {
         report.push(
           `✗ ${file}: ПУСТОЙ экспорт (${analysis.width}×${analysis.height}) — перевыгрузи ` +
-            "узел-родитель через download_assets и обрежь (proto://knowledge/figma-import)"
+            "узел-родитель через download_assets и обрежь (alfa://knowledge/figma-import)"
         );
         continue;
       }

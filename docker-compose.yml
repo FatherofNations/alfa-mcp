@@ -1,7 +1,7 @@
 services:
-  proto-forge:
+  alfa-mcp:
     build: .
-    container_name: proto-forge
+    container_name: alfa-mcp
     restart: unless-stopped
     expose:
       - "8811"

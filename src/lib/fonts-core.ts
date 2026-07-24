@@ -40,8 +40,8 @@ export function fontFaceCss(fonts: FontFile[], urlBase = "/fonts"): string {
   font-display: swap;
 }`
   );
-  return `/* Сгенерировано proto-forge (источник: core-ds).
-   См. proto://knowledge/design-system — почему @font-face, а не next/font. */
+  return `/* Сгенерировано alfa-mcp (источник: core-ds).
+   См. alfa://knowledge/design-system — почему @font-face, а не next/font. */
 
 ${blocks.join("\n\n")}
 `;

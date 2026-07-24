@@ -93,7 +93,7 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
           r.add("```bash");
           r.add(`curl -fsS -o dash.tgz "${url}" && tar xzf dash.tgz && rm dash.tgz`);
           r.add("```");
-          r.add("Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД маркером `/* proto-forge:dashboards */`:");
+          r.add("Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД маркером `/* alfa-mcp:dashboards */`:");
           r.add("```ts");
           r.add(entry);
           r.add("```");
@@ -112,7 +112,7 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         r.add("```tsx");
         r.add(dash);
         r.add("```");
-        r.add("3. Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД строкой-маркером `/* proto-forge:dashboards */`:");
+        r.add("3. Если в проекте есть панель tools — в lib/dashboards.ts вставь ПЕРЕД строкой-маркером `/* alfa-mcp:dashboards */`:");
         r.add("```ts");
         r.add(entry);
         r.add("```");
@@ -143,7 +143,7 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         // preload-линки шрифтов — те же, что в index.html
         const preloads = indexHtml.match(/^\s*<link rel="preload"[^>]*>$/gm) ?? [];
         if (preloads.length) {
-          html = html.replace("  <!-- proto-forge:fonts -->", `${preloads.join("\n")}\n  <!-- proto-forge:fonts -->`);
+          html = html.replace("  <!-- alfa-mcp:fonts -->", `${preloads.join("\n")}\n  <!-- alfa-mcp:fonts -->`);
         }
         writeFileEnsured(htmlPath, html);
         const r = new Report();
@@ -157,7 +157,7 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
 
       const pagePath = path.join(root, `app/${route.slice(1)}/page.tsx`);
       if (!fs.existsSync(path.join(root, "app"))) {
-        return fail(`нет ${root}/app — проект не из шаблона proto-forge (сначала scaffold_project)`);
+        return fail(`нет ${root}/app — проект не из шаблона alfa-mcp (сначала scaffold_project)`);
       }
       if (fs.existsSync(pagePath)) return fail(`${pagePath} уже существует`);
 
@@ -183,15 +183,15 @@ export function registerDashboards(server: McpServer, ctx: ServerCtx) {
         const reg = fs.readFileSync(regPath, "utf8");
         if (new RegExp(`route:\\s*"${route}"`).test(reg)) {
           r.add(`• роут ${route} уже в реестре — не дублирую`);
-        } else if (reg.includes("/* proto-forge:dashboards */")) {
+        } else if (reg.includes("/* alfa-mcp:dashboards */")) {
           fs.writeFileSync(
             regPath,
-            reg.replace("  /* proto-forge:dashboards */", `${entry}\n  /* proto-forge:dashboards */`),
+            reg.replace("  /* alfa-mcp:dashboards */", `${entry}\n  /* alfa-mcp:dashboards */`),
             "utf8"
           );
           r.add(`✓ lib/dashboards.ts: карточка «${title}» добавлена (своп/префетч — сами)`);
         } else {
-          r.add("⚠ в lib/dashboards.ts нет маркера proto-forge:dashboards — добавь запись вручную:");
+          r.add("⚠ в lib/dashboards.ts нет маркера alfa-mcp:dashboards — добавь запись вручную:");
           r.add(entry);
         }
       } else {

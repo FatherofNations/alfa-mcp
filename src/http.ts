@@ -60,7 +60,7 @@ export function startHttp(port: number) {
   };
 
   app.get("/healthz", (_req, res) => {
-    res.json({ ok: true, server: "proto-forge", transport: "streamable-http" });
+    res.json({ ok: true, server: "alfa-mcp", transport: "streamable-http" });
   });
 
   // ── аватарка коннектора (публично, без auth): логотип из brand/ ──
@@ -172,7 +172,7 @@ export function startHttp(port: number) {
 
   app.listen(port, () => {
     console.error(
-      `proto-forge MCP server: http://0.0.0.0:${port}/mcp (streamable, stateless)` +
+      `alfa-mcp MCP server: http://0.0.0.0:${port}/mcp (streamable, stateless)` +
         (authToken ? " [auth: bearer]" : " [auth: OFF]")
     );
   });

@@ -4,9 +4,9 @@ import { demoStats } from "@/data/demo";
 import { usePageBehavior } from "@/lib/usePageBehavior";
 
 /* Дашборд «__DASH_TITLE__» — заготовка. Сюда верстается макет:
-   - статичную разметку переносить byte-perfect (proto://knowledge/pixel-perfect);
+   - статичную разметку переносить byte-perfect (alfa://knowledge/pixel-perfect);
    - при миграции больших кусков — dangerouslySetInnerHTML + memo
-     (proto://knowledge/react-patterns);
+     (alfa://knowledge/react-patterns);
    - демо-данные держать в data/*, не в разметке. */
 
 function __DASH_COMPONENT__Inner() {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* parity-QA прототипа (см. proto://knowledge/verification).
+/* parity-QA прототипа (см. alfa://knowledge/verification).
    Запуск: node scripts/verify.mjs [baseUrl]   (дефолт http://localhost:3000)
    Сервер должен быть запущен (npm run dev или build+start).
 

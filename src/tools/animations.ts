@@ -169,7 +169,7 @@ ${sel} { transform: translate(var(--mx, 0px), var(--my, 0px)); }`,
         `JS: mousemove + rAF-троттл; радиус ${radius}px; смещение dx*0.06*f с clamp ±8/±6px; писать в --mx/--my.`,
         "Выключать при :active и при открытых оверлеях.",
         "Если на элементе есть keyframe с transform (pop) — обнулить --mx/--my ПЕРЕД запуском.",
-        "Готовый JS-сниппет — в proto://knowledge/animation-canon, рецепт 11.",
+        "Готовый JS-сниппет — в alfa://knowledge/animation-canon, рецепт 11.",
       ],
     };
   },
@@ -196,7 +196,7 @@ export function registerAnimations(server: McpServer) {
     {
       title: "Канон-анимация под селектор",
       description:
-        "Генерирует CSS-рецепт из канона (proto://knowledge/animation-canon) под " +
+        "Генерирует CSS-рецепт из канона (alfa://knowledge/animation-canon) под " +
         "конкретный селектор + инструкцию подключения. Кривые/тайминги канонические. " +
         "CSS вставь в styles/app.css (или файл страницы).",
       inputSchema: {

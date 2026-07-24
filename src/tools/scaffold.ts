@@ -33,7 +33,7 @@ import {
 } from "../lib/preset.js";
 
 /* scaffold_project — новый проект-прототип. Два стека (выбор — ЗА
-   ПОЛЬЗОВАТЕЛЕМ, агент обязан спросить, см. proto://knowledge/stack-choice):
+   ПОЛЬЗОВАТЕЛЕМ, агент обязан спросить, см. alfa://knowledge/stack-choice):
    - static: чистый HTML/CSS/JS без сборки — максимальная скорость
      pixel-perfect вёрстки;
    - next: Next.js 15 + React — масштабируемость, панель tools,
@@ -157,7 +157,7 @@ async function generateNext(projectDir: string, a: ScaffoldArgs, r: Report) {
     const regPath = path.join(projectDir, "lib/dashboards.ts");
     const reg = fs
       .readFileSync(regPath, "utf8")
-      .replace("  /* proto-forge:dashboards */", `${entries.join("\n")}\n  /* proto-forge:dashboards */`);
+      .replace("  /* alfa-mcp:dashboards */", `${entries.join("\n")}\n  /* alfa-mcp:dashboards */`);
     fs.writeFileSync(regPath, reg, "utf8");
     r.add(`Панель tools: реестр lib/dashboards.ts (${a.dashboards.length} карточек)`);
   }
@@ -170,7 +170,7 @@ async function generateNext(projectDir: string, a: ScaffoldArgs, r: Report) {
       const layout = fs.readFileSync(layoutPath, "utf8");
       fs.writeFileSync(
         layoutPath,
-        layout.replace("  /* proto-forge:fonts */", `${preloadList(installed)}\n  /* proto-forge:fonts */`),
+        layout.replace("  /* alfa-mcp:fonts */", `${preloadList(installed)}\n  /* alfa-mcp:fonts */`),
         "utf8"
       );
       r.add(`Шрифты core-ds установлены: ${installed.length} woff2 + fonts.css + preload`);
@@ -245,7 +245,7 @@ async function generateStatic(projectDir: string, a: ScaffoldArgs, r: Report) {
     const file = first ? "index.html" : `${slug}.html`;
     let html = applyPlaceholders(pageTpl, { ...vars, DASH_TITLE: dashName });
     if (preloadHtml) {
-      html = html.replace("  <!-- proto-forge:fonts -->", `${preloadHtml}\n  <!-- proto-forge:fonts -->`);
+      html = html.replace("  <!-- alfa-mcp:fonts -->", `${preloadHtml}\n  <!-- alfa-mcp:fonts -->`);
     }
     writeFileEnsured(path.join(projectDir, file), html);
     r.add(`Дашборд «${dashName}»: ${file}`);
@@ -273,7 +273,7 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
         "спроси пользователя, на каком стеке собирать (параметр stack, сам не выбирай): " +
         "static — чистый HTML/CSS/JS, максимальная скорость pixel-perfect вёрстки; " +
         "next — Next.js 15 + React, масштабируемость, панель tools, deep-links, " +
-        "компоненты core-ds. Критерии выбора: proto://knowledge/stack-choice. " +
+        "компоненты core-ds. Критерии выбора: alfa://knowledge/stack-choice. " +
         "Панель tools (features.toolsPanel, только next) — тоже ТОЛЬКО по явной " +
         "просьбе пользователя. Шрифты дизайн-системы ставятся сразу.",
       inputSchema: {
@@ -375,7 +375,7 @@ export function registerScaffold(server: McpServer, ctx: ServerCtx) {
       r.add("");
       r.add("## Следующие шаги");
       r.add("1. get_variable_defs (Figma MCP) → extract_tokens → styles/tokens.css");
-      r.add("2. Перед разбором макета прочитать proto://knowledge/figma-import (быстрый пайплайн ассетов)");
+      r.add("2. Перед разбором макета прочитать alfa://knowledge/figma-import (быстрый пайплайн ассетов)");
       r.add(
         `3. Ассеты: download_assets (Figma MCP) в ${stack === "next" ? "public/assets/figma" : "assets/figma"} → process_assets`
       );

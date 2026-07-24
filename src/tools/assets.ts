@@ -8,7 +8,7 @@ import { sanitizeSvg } from "../lib/svg.js";
 import { processAssetsDir } from "../lib/process.js";
 
 /* Пайплайн ассетов. Скачивает ассеты официальный Figma MCP
-   (download_assets, батчем!) — proto-forge их пост-процессит одной
+   (download_assets, батчем!) — alfa-mcp их пост-процессит одной
    операцией: это самый быстрый путь без потери качества.
    Никаких Figma-токенов не нужно. */
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { preload } from "react-dom";
 // Порядок CSS: tokens → fonts → canon → app → tools → mobile-gate
-// (см. proto://knowledge/project-structure)
+// (см. alfa://knowledge/project-structure)
 import "@/styles/tokens.css";
 import "@/styles/fonts.css";
 import "@/styles/canon.css";
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
 // на имена семейств литералом, поэтому next/font/local не подходит, он
 // хеширует имя). Preload убирает FOUT. crossOrigin обязателен: шрифты
 // грузятся в CORS-режиме даже same-origin.
-// Список заполняется при скаффолде (см. proto://knowledge/design-system).
+// Список заполняется при скаффолде (см. alfa://knowledge/design-system).
 const FONTS: string[] = [
-  /* proto-forge:fonts */
+  /* alfa-mcp:fonts */
 ];
 
 export default function RootLayout({

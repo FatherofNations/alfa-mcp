@@ -1,5 +1,5 @@
 /* Поведение страницы — vanilla JS, без сборки.
-   Правила (см. proto://knowledge/animation-canon и pixel-perfect):
+   Правила (см. alfa://knowledge/animation-canon и pixel-perfect):
    - тайминги/кривые — только канон (классы в styles/canon.css);
    - слушатели — именованными функциями (снимать при необходимости);
    - данные захардкожены рядом с использованием, не читаются из DOM. */

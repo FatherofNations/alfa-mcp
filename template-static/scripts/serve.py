@@ -3,7 +3,7 @@
 
 Запускать из КОРНЯ проекта. Обязательно смотреть по http://localhost, не по
 file:// — по file:// часть <img> стабильно не дорисовывается к скриншоту
-(см. proto://knowledge/pixel-perfect). Кеш выключен: правка CSS видна по F5.
+(см. alfa://knowledge/pixel-perfect). Кеш выключен: правка CSS видна по F5.
 """
 
 import http.server

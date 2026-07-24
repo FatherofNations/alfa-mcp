@@ -1,6 +1,6 @@
 # __PROJECT_TITLE__ — Handoff
 
-> Заполняется по ходу работы. Каркас — из proto-forge.
+> Заполняется по ходу работы. Каркас — из alfa-mcp.
 
 Интерактивный прототип по Figma-макету. Стек: Next.js 15 (App Router),
 React 19, TypeScript. Без UI-библиотек, глобальный CSS.
@@ -48,5 +48,5 @@ _Каждое отступление — строкой: что, почему, �
 ## Деплой
 
 - Прод: _<URL>_
-- Флоу и грабли: `proto://knowledge/deploy-vercel` (framework preset,
+- Флоу и грабли: `alfa://knowledge/deploy-vercel` (framework preset,
   protection, promote).

@@ -4,7 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { KNOWLEDGE_DIR } from "./lib/paths.js";
 
-/* База знаний: каждый knowledge/<name>.md — ресурс proto://knowledge/<name>.
+/* База знаний: каждый knowledge/<name>.md — ресурс alfa://knowledge/<name>.
    Документы читаются с диска на каждый запрос (правки базы не требуют
    рестарта сервера при dev-запуске через tsx). */
 
@@ -39,21 +39,22 @@ export function readKnowledge(name: string): string | null {
 export function registerResources(server: McpServer) {
   server.registerResource(
     "knowledge",
-    new ResourceTemplate("proto://knowledge/{name}", {
+    new ResourceTemplate("alfa://knowledge/{name}", {
       list: () => ({
         resources: knowledgeNames().map((name) => ({
-          uri: `proto://knowledge/${name}`,
+          uri: `alfa://knowledge/${name}`,
           name,
-          title: `proto-forge: ${name}`,
-          description: DESCRIPTIONS[name] ?? "Документ базы знаний proto-forge",
+          title: `Альфа: ${name}`,
+          description: DESCRIPTIONS[name] ?? "Документ базы знаний Альфы",
           mimeType: "text/markdown",
         })),
       }),
     }),
     {
-      title: "База знаний proto-forge",
+      title: "База знаний Альфы",
       description:
-        "Конденсат best practices разработки прототипов по Figma-макетам. Начни с proto://knowledge/index.",
+        "Конденсат best practices разработки прототипов по Figma-макетам для " +
+        "Альфа-Бизнеса. Начни с alfa://knowledge/index.",
       mimeType: "text/markdown",
     },
     async (uri, { name }) => {

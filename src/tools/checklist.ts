@@ -7,7 +7,7 @@ import { ok } from "../lib/report.js";
 
 const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
   import: {
-    doc: "proto://knowledge/figma-import",
+    doc: "alfa://knowledge/figma-import",
     items: [
       "Figma MCP отвечает; если нет — СТОП: спросить пользователя и порекомендовать включить MCP, по скриншоту верстать только с явного согласия",
       "get_metadata по фрейму свежий (node-id из старых сессий не использовать)",
@@ -20,7 +20,7 @@ const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
     ],
   },
   layout: {
-    doc: "proto://knowledge/pixel-perfect + react-patterns",
+    doc: "alfa://knowledge/pixel-perfect + react-patterns",
     items: [
       "значения (размеры/цвета/шрифты) — из design context, не со скриншота",
       "крупная статичная разметка перенесена byte-perfect, не «по мотивам»",
@@ -32,7 +32,7 @@ const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
     ],
   },
   animation: {
-    doc: "proto://knowledge/animation-canon",
+    doc: "alfa://knowledge/animation-canon",
     items: [
       "кривые/тайминги — только из канона (появление 0.5s/0.55s, скрытие 0.22s ease-in)",
       "скрытие быстрее появления (асимметрия) и без задержки",
@@ -43,7 +43,7 @@ const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
     ],
   },
   qa: {
-    doc: "proto://knowledge/verification",
+    doc: "alfa://knowledge/verification",
     items: [
       "npm run verify зелёный (роуты 200, ассеты на месте)",
       "0 битых <img> (naturalWidth !== 0)",
@@ -55,7 +55,7 @@ const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
     ],
   },
   deploy: {
-    doc: "proto://knowledge/deploy-vercel",
+    doc: "alfa://knowledge/deploy-vercel",
     items: [
       "vercel.json с {\"framework\":\"nextjs\"} закоммичен",
       "деплой только по явной команде человека",

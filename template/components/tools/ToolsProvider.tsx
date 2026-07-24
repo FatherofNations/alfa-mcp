@@ -15,7 +15,7 @@ import ToolsPanel from "./ToolsPanel";
 /* Контекст прототипа — живёт в root layout (переживает смену роута →
    панель не закрывается при свопе дашбордов). Держит: текущий дашборд
    (из pathname), состояния прототипа, открытость панели, своп-диссолв.
-   См. proto://knowledge/tools-panel. */
+   См. alfa://knowledge/tools-panel. */
 
 /* Состояния прототипа: ЗАГЛУШКИ. Замените поля под свой макет (варианты
    меню, тогглы стека и т.п.) — панель и deep-links уже подключены. */
@@ -105,7 +105,7 @@ export default function ToolsProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   /* proto:if deepLinks */
-  /* ── состояние в URL (см. proto://knowledge/deep-links) ──
+  /* ── состояние в URL (см. alfa://knowledge/deep-links) ──
      Дашборд уже в пути; параметры пишем в query через replaceState. */
   const urlSynced = useRef(false);
 

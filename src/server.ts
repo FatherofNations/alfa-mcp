@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* proto-forge — MCP-сервер для скоростной разработки интерактивных
+/* alfa-mcp — MCP-сервер для скоростной разработки интерактивных
    прототипов по Figma-макетам.
 
    Режимы:
@@ -7,7 +7,7 @@
    - http (env PROTO_HTTP_PORT или --http [port]) — командный хостинг:
      Streamable HTTP + эндпоинты /dl (артефакты) и /process (ассеты).
 
-   proto-forge НЕ проксирует официальный Figma MCP, НЕ требует Figma-токенов
+   alfa-mcp НЕ проксирует официальный Figma MCP, НЕ требует Figma-токенов
    и НЕ деплоит/не трогает git — это решения агента/человека. */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -29,5 +29,5 @@ if (httpPort) {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // stdout занят протоколом — служебные сообщения только в stderr
-  console.error("proto-forge MCP server: stdio transport ready");
+  console.error("alfa-mcp MCP server: stdio transport ready");
 }

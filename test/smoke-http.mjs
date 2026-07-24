@@ -11,7 +11,7 @@ import path from "node:path";
 const PORT = 8899;
 const TOKEN = "smoke-test-token";
 const BASE = `http://127.0.0.1:${PORT}`;
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "proto-forge-http-"));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "alfa-mcp-http-"));
 
 const server = spawn("node", [path.resolve("dist/server.js"), "--http", String(PORT)], {
   env: { ...process.env, PROTO_AUTH_TOKEN: TOKEN },
@@ -70,7 +70,7 @@ try {
     capabilities: {},
     clientInfo: { name: "smoke-http", version: "0" },
   });
-  check("initialize", init.serverInfo?.name === "proto-forge");
+  check("initialize", init.serverInfo?.name === "alfa-mcp");
   check(
     "иконка коннектора (http: URL на сервере)",
     init.serverInfo?.icons?.some((i) => i.src === `${BASE}/icon.png`)

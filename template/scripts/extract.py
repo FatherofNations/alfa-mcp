@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Экстрактор byte-perfect партиалов из статического HTML.
 
-Путь миграции «статика → Next.js» (см. proto://knowledge/react-patterns):
+Путь миграции «статика → Next.js» (см. alfa://knowledge/react-patterns):
 крупная разметка переносится байт-в-байт в htmlPartials.ts и инжектится
 через dangerouslySetInnerHTML — НЕ переписывается вручную в JSX.
 

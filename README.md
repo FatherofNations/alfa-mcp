@@ -1,4 +1,4 @@
-# proto-forge
+# alfa-mcp
 
 MCP-сервер для скоростной разработки интерактивных прототипов по
 Figma-макетам. Конденсат опыта реальных проектов (пиксель-перфект
@@ -7,7 +7,7 @@ Figma-макетам. Конденсат опыта реальных проек�
 
 Работает **в паре** с официальным Figma MCP: данные и ассеты макета —
 оттуда (`get_design_context` / `get_variable_defs` / `download_assets`),
-обработка и экспертиза — отсюда. **Figma-токены не нужны.** proto-forge
+обработка и экспертиза — отсюда. **Figma-токены не нужны.** alfa-mcp
 не трогает git и не деплоит — это решения агента/человека.
 
 ## Подключение (Claude Code)
@@ -16,29 +16,29 @@ Figma-макетам. Конденсат опыта реальных проек�
 просто по URL, без токена:
 
 ```bash
-claude mcp add --transport http proto-forge https://alfa-mcp.leggit.ru/mcp
+claude mcp add --transport http alfa-mcp https://alfa-mcp.leggit.ru/mcp
 ```
 
 Или в настройках claude.ai → Connectors: добавить URL `https://alfa-mcp.leggit.ru/mcp`.
 
 Аутентификацию можно включить: задать `PROTO_AUTH_TOKEN` в
-`/root/proto-forge/.env` и `docker compose up -d` — тогда нужен заголовок
+`/root/alfa-mcp/.env` и `docker compose up -d` — тогда нужен заголовок
 `Authorization: Bearer <токен>`.
 
 Альтернатива — локально по stdio (файловые тулы тогда пишут напрямую
 в проект):
 
 ```bash
-git clone https://github.com/FatherofNations/proto-forge.git
-cd proto-forge && npm install && npm run build
-claude mcp add proto-forge -- node /path/to/proto-forge/dist/server.js
+git clone https://github.com/FatherofNations/alfa-mcp.git
+cd alfa-mcp && npm install && npm run build
+claude mcp add alfa-mcp -- node /path/to/alfa-mcp/dist/server.js
 ```
 
 ## Что внутри
 
-### Resources — база знаний (`proto://knowledge/*`)
+### Resources — база знаний (`alfa://knowledge/*`)
 
-Оглавление: `proto://knowledge/index`. Документы: figma-import (включая
+Оглавление: `alfa://knowledge/index`. Документы: figma-import (включая
 «Быстрый пайплайн ассетов»), pixel-perfect, **animation-canon** (12
 рецептов с выверенными кривыми), react-patterns, project-structure,
 tools-panel, deep-links, deploy-vercel, verification, design-system.

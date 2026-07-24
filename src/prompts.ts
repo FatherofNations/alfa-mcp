@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 /* Prompts — готовые сценарии для агента. Каждый разворачивается в
-   пошаговую инструкцию со ссылками на resources и tools proto-forge. */
+   пошаговую инструкцию со ссылками на resources и tools alfa-mcp. */
 
 function p(text: string) {
   return {
@@ -26,11 +26,11 @@ export function registerPrompts(server: McpServer) {
       p(`Сверстай новый дашборд «${name}» по Figma-фрейму ${nodeId} (файл ${fileKey}).
 
 Порядок (не пропускать шаги):
-1. Прочитай proto://knowledge/figma-import (особенно «Быстрый пайплайн ассетов») и proto://knowledge/pixel-perfect.
+1. Прочитай alfa://knowledge/figma-import (особенно «Быстрый пайплайн ассетов») и alfa://knowledge/pixel-perfect.
 2. get_metadata по фрейму ${nodeId} → список под-узлов; get_design_context ПО КАЖДОМУ крупному под-узлу (лимит ~25k токенов). get_screenshot фрейма — сохранить как эталон.
 3. get_variable_defs → extract_tokens (если токены ещё не выгружены).
 4. За ОДИН проход собери список всех ассетов (иконки svg, картинки png) с node-id и camelCase-именами → ОДИН батч download_assets (Figma MCP) в public/assets/figma → сразу process_assets на папку.
-5. Если проект ещё не создан — СНАЧАЛА спроси пользователя про стек (static или next, критерии в proto://knowledge/stack-choice) → scaffold_project; иначе register_dashboard (name="${name}").
+5. Если проект ещё не создан — СНАЧАЛА спроси пользователя про стек (static или next, критерии в alfa://knowledge/stack-choice) → scaffold_project; иначе register_dashboard (name="${name}").
 6. Вёрстка строго по design context (не по скриншоту), данные — в data/*. Анимации — только add_animation / канон.
 7. Бленд-дифф с эталоном; npm run verify; get_checklist(stage:"qa") — пройди все пункты.
 Отступления от макета фиксируй в HANDOFF.md.`)
@@ -50,7 +50,7 @@ export function registerPrompts(server: McpServer) {
     ({ fileKey, nodeId, pane }) =>
       p(`Добавь виджет из Figma-узла ${nodeId} (файл ${fileKey}) в пейн ${pane}.
 
-1. Прочитай proto://knowledge/figma-import (грабли под-узлов и инстансов).
+1. Прочитай alfa://knowledge/figma-import (грабли под-узлов и инстансов).
 2. get_design_context по узлу ${nodeId} (при обрезке — по под-узлам); get_screenshot узла — эталон.
 3. Ассеты узла: ОДИН батч download_assets (Figma MCP) → сразу process_assets на папку.
 4. Вёрстка в сетке пейна ${pane}; появление виджета — в общий стаггер пейна (не отдельная анимация).
@@ -71,7 +71,7 @@ export function registerPrompts(server: McpServer) {
     ({ description, selector }) =>
       p(`Нужна анимация: ${description}${selector ? ` (цель: ${selector})` : ""}.
 
-1. Прочитай proto://knowledge/animation-canon.
+1. Прочитай alfa://knowledge/animation-canon.
 2. Подбери ближайший рецепт (blur-reveal / stagger / pane-switch / content-dissolve / tab-pill / ticker / spin-ring / magnet / stream-reveal). НЕ изобретай новые кривые.
 3. add_animation с выбранным рецептом и селектором → вставь CSS в styles/app.css, подключи по инструкции из выдачи.
 4. Проверь тайминги getComputedStyle (verification.md), середину — трюком transition-delay:-30s.`)
@@ -89,7 +89,7 @@ export function registerPrompts(server: McpServer) {
     ({ route }) =>
       p(`Прогони parity-QA для ${route}.
 
-1. Прочитай proto://knowledge/verification.
+1. Прочитай alfa://knowledge/verification.
 2. npm run verify (сервер должен быть запущен) — приложи вывод.
 3. Вручную через браузер: программный проклик всех тогглов/табов (dispatchEvent, не «на глаз»), после каждого — assert DOM.
 4. Сэмплируй тайминги ключевых анимаций getComputedStyle — сверь с каноном.
@@ -107,7 +107,7 @@ export function registerPrompts(server: McpServer) {
     () =>
       p(`Задеплой прототип на Vercel по надёжному флоу.
 
-1. Прочитай proto://knowledge/deploy-vercel ЦЕЛИКОМ (там три невидимых грабли).
+1. Прочитай alfa://knowledge/deploy-vercel ЦЕЛИКОМ (там три невидимых грабли).
 2. Убедись, что dev-сервер остановлен; rm -rf .next .vercel/output.
 3. vercel build --prod → проверь .vercel/output/builds.json (use = @vercel/next; иначе vercel.json не подхватился).
 4. vercel deploy --prebuilt --prod.

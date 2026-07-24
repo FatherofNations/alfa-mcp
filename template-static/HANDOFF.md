@@ -1,6 +1,6 @@
 # __PROJECT_TITLE__ — Handoff
 
-> Заполняется по ходу работы. Каркас — из proto-forge (static-стек).
+> Заполняется по ходу работы. Каркас — из alfa-mcp (static-стек).
 
 Статический прототип по Figma-макету: чистый HTML/CSS/JS, без сборки.
 
@@ -32,4 +32,4 @@ _Каждое отступление — строкой: что, почему, �
 - Анимации — только канон (`styles/canon.css`); новые кривые не заводить.
 - Скриншоты для диффа — по `http://localhost`, не `file://`.
 - При росте прототипа (панель состояний, deep-links) — миграция на Next.js
-  по `proto://knowledge/react-patterns`.
+  по `alfa://knowledge/react-patterns`.

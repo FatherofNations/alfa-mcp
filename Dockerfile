@@ -1,4 +1,4 @@
-# proto-forge MCP server — командный хостинг (Streamable HTTP)
+# alfa-mcp MCP server — командный хостинг (Streamable HTTP)
 FROM node:22-bookworm-slim
 
 WORKDIR /app

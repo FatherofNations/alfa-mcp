@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Smoke-тест proto-forge (stdio): JSON-RPC через стандартные потоки.
+/* Smoke-тест alfa-mcp (stdio): JSON-RPC через стандартные потоки.
    Запуск: node test/smoke.mjs (после npm run build). */
 
 import { spawn } from "node:child_process";
@@ -7,7 +7,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "proto-forge-smoke-"));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "alfa-mcp-smoke-"));
 const server = spawn("node", [path.resolve("dist/server.js")], {
   cwd: tmp, // тулы резолвят пути от cwd процесса
   stdio: ["pipe", "pipe", "inherit"],
@@ -64,7 +64,14 @@ try {
     capabilities: {},
     clientInfo: { name: "smoke", version: "0" },
   });
-  check("initialize", init.serverInfo?.name === "proto-forge");
+  check("initialize", init.serverInfo?.name === "alfa-mcp");
+  check("title/имя — Альфа (агент опознаёт по-русски)", init.serverInfo?.title?.startsWith("Альфа"));
+  const pkgVersion = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+  check(
+    `serverInfo.version == package.json (${pkgVersion})`,
+    init.serverInfo?.version === pkgVersion,
+    `serverInfo=${init.serverInfo?.version}`
+  );
   check(
     "инструкции: нет данных из Figma MCP → спросить пользователя",
     init.instructions?.includes("СТОП: не верстать по скриншоту молча") &&
@@ -88,11 +95,11 @@ try {
   // ── resources / prompts ──
   const res = await rpc("resources/list");
   check("resources/list = 12 документов", res.resources.length === 12, `получено ${res.resources.length}`);
-  const stackDoc = await rpc("resources/read", { uri: "proto://knowledge/stack-choice" });
+  const stackDoc = await rpc("resources/read", { uri: "alfa://knowledge/stack-choice" });
   check("stack-choice: спросить пользователя + core-ds", stackDoc.contents[0].text.includes("@alfalab/core-components"));
-  const canon = await rpc("resources/read", { uri: "proto://knowledge/animation-canon" });
+  const canon = await rpc("resources/read", { uri: "alfa://knowledge/animation-canon" });
   check("resources/read animation-canon", canon.contents[0].text.includes("cubic-bezier(0.32, 0.72, 0, 1)"));
-  const fimport = await rpc("resources/read", { uri: "proto://knowledge/figma-import" });
+  const fimport = await rpc("resources/read", { uri: "alfa://knowledge/figma-import" });
   check("figma-import: быстрый пайплайн, без токенов", fimport.contents[0].text.includes("process_assets") && !fimport.contents[0].text.includes("import_figma_assets"));
   check(
     "figma-import: правило №2 (нет MCP → стоп + спросить + рекомендовать)",

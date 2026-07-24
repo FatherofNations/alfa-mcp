@@ -2,11 +2,11 @@
 import { useEffect } from "react";
 
 /* Заготовка хука поведения страницы — порт vanilla-паттерна.
-   Правила (см. proto://knowledge/react-patterns):
+   Правила (см. alfa://knowledge/react-patterns):
    - DOM опрашиваем в useEffect через document.querySelector;
    - ПОЛНЫЙ cleanup: StrictMode прогоняет эффекты дважды (dev);
    - данные, читаемые из DOM при маунте, — захардкодить;
-   - тайминги/кривые — только из канона (proto://knowledge/animation-canon). */
+   - тайминги/кривые — только из канона (alfa://knowledge/animation-canon). */
 
 export function usePageBehavior() {
   useEffect(() => {

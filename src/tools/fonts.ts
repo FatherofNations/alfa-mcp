@@ -83,15 +83,15 @@ export function registerFonts(server: McpServer, ctx: ServerCtx) {
       const preload = preloadList(installed);
       if (fs.existsSync(layoutPath)) {
         const layout = fs.readFileSync(layoutPath, "utf8");
-        if (layout.includes("/* proto-forge:fonts */")) {
+        if (layout.includes("/* alfa-mcp:fonts */")) {
           fs.writeFileSync(
             layoutPath,
-            layout.replace("  /* proto-forge:fonts */", `${preload}\n  /* proto-forge:fonts */`),
+            layout.replace("  /* alfa-mcp:fonts */", `${preload}\n  /* alfa-mcp:fonts */`),
             "utf8"
           );
           r.add("✓ app/layout.tsx: массив FONTS (preload) дополнен");
         } else {
-          r.add("⚠ app/layout.tsx без маркера proto-forge:fonts — добавь preload вручную:");
+          r.add("⚠ app/layout.tsx без маркера alfa-mcp:fonts — добавь preload вручную:");
           r.add(preload);
         }
       } else {

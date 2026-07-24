@@ -1,6 +1,6 @@
 # Проверки на каждый push/PR в main: линт (0 варнингов), типы, сборка.
 # Деплой здесь НЕ выполняется — прод выкатывается по явной команде
-# (см. proto://knowledge/deploy-vercel).
+# (см. alfa://knowledge/deploy-vercel).
 name: CI
 
 on:

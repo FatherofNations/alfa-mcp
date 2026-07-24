@@ -4,7 +4,7 @@ import { DASHBOARDS } from "@/lib/dashboards";
 
 /* Панель прототипа: карточки-селектор дашбордов, секции параметров.
    Динамическая часть (.twk-dyn) ремаунтится по key → пункты проявляются
-   из блюра сверху вниз по канону. См. proto://knowledge/tools-panel. */
+   из блюра сверху вниз по канону. См. alfa://knowledge/tools-panel. */
 
 // iOS-свитч (стили .twk-sw в tools.css)
 function Switch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {

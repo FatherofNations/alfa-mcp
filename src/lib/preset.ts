@@ -53,7 +53,7 @@ export function applyAccountantNext(
   const escaped = html.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
   writeFileEnsured(
     path.join(projectDir, "components/dashboards/accountantHtml.ts"),
-    `/* АВТОГЕН proto-forge (пресет accountant) — byte-perfect блоки главной
+    `/* АВТОГЕН alfa-mcp (пресет accountant) — byte-perfect блоки главной
    «Бухгалтера». Правки контента — прямо в этой разметке (или через
    register_dashboard/пресет заново). Блоки: ${blocks.join(", ")}. */
 
@@ -71,7 +71,7 @@ import { ACCOUNTANT_HTML } from "./accountantHtml";
 import "@/styles/accountant.css";
 
 /* Дашборд из пресета «accountant»: контент инжектится byte-perfect
-   (см. proto://knowledge/react-patterns). memo ОБЯЗАТЕЛЕН — иначе апдейт
+   (см. alfa://knowledge/react-patterns). memo ОБЯЗАТЕЛЕН — иначе апдейт
    контекста tools пере-инжектит статику. body.cur — min-width 1600. */
 
 function ${comp}Inner() {

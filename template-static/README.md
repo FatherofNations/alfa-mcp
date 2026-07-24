@@ -1,7 +1,7 @@
 # __PROJECT_TITLE__
 
 Статический прототип (чистый HTML/CSS/JS, без сборки) по Figma-макету.
-Создан из шаблона [proto-forge](https://github.com/FatherofNations/proto-forge).
+Создан из шаблона [alfa-mcp](https://github.com/FatherofNations/alfa-mcp).
 
 ```bash
 python3 scripts/serve.py        # http://localhost:8000 (из корня проекта!)
@@ -22,10 +22,10 @@ python3 scripts/serve.py        # http://localhost:8000 (из корня про�
 ## Дальнейшие шаги
 
 1. `get_variable_defs` (Figma MCP) → `extract_tokens` → `styles/tokens.css`
-2. Разбор макета: `proto://knowledge/figma-import` + `pixel-perfect`
+2. Разбор макета: `alfa://knowledge/figma-import` + `pixel-perfect`
 3. Ассеты: один батч `download_assets` → сразу `process_assets`
 4. Анимации — только канон (`canon.css` / `add_animation`)
 5. Если прототип разрастётся (состояния, панель tools) — миграция на
-   Next.js по `proto://knowledge/react-patterns` (byte-perfect партиалы)
+   Next.js по `alfa://knowledge/react-patterns` (byte-perfect партиалы)
 
 Handoff: [HANDOFF.md](HANDOFF.md).

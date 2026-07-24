@@ -94,7 +94,7 @@ export function registerTokens(server: McpServer, ctx: ServerCtx) {
       }
 
       const lines = [...seen.entries()].map(([name, css]) => `  --${name}: ${css};`);
-      const body = `/* Токены из Figma variable defs — сгенерировано proto-forge extract_tokens.
+      const body = `/* Токены из Figma variable defs — сгенерировано alfa-mcp extract_tokens.
    Не редактировать руками без нужды: при обновлении макета перегенерировать. */
 :root {
 ${lines.join("\n")}
