@@ -38,16 +38,24 @@ claude mcp add alfa-mcp -- node /path/to/alfa-mcp/dist/server.js
 
 ### Resources — база знаний (`alfa://knowledge/*`)
 
-Оглавление: `alfa://knowledge/index`. Документы: figma-import (включая
-«Быстрый пайплайн ассетов»), pixel-perfect, **animation-canon** (12
-рецептов с выверенными кривыми), react-patterns, project-structure,
-tools-panel, deep-links, deploy-vercel, verification, design-system.
-Агент читает нужный гайд ПЕРЕД задачей.
+Оглавление: `alfa://knowledge/index`. Документы: stack-choice,
+figma-import (включая «Быстрый пайплайн ассетов»), **table-import**,
+pixel-perfect, **animation-canon** (12 рецептов с выверенными кривыми),
+react-patterns, project-structure, tools-panel, deep-links,
+deploy-vercel, verification, design-system. Агент читает нужный гайд
+ПЕРЕД задачей.
+
+**Каноны читаются тулом `read_knowledge`**: MCP-ресурсы поддерживают не
+все клиенты, и на практике агент оставался вообще без базы знаний.
+Ресурсы никуда не делись — там, где они работают, они удобнее.
 
 ### Tools
 
 | Тул | Что делает |
 |---|---|
+| `read_knowledge` | база знаний текстом; без аргументов — оглавление. Основной способ читать каноны |
+| `digest_design_context` | сжимает выдачу Figma MCP, не влезшую в лимит, до 1–3%: `layout` (дерево со схлопнутыми повторами), `rows` (таблица: подложка строк + геометрия ячеек + матрица текстов), `text` (типографика по стилям), `assets` (именованные ассеты + curl) |
+| `parity_check` | попиксельная сверка рендера с эталоном Figma: метрики, карта горячих блоков, смещения текстовых ранов — находит то, что не видно глазом |
 | `scaffold_project` | новый проект: Next.js 15, канон-анимации, шрифты core-ds сразу, verify, CI. Достаточно `name`. Панель tools — только по явной просьбе |
 | `process_assets` | пост-процессинг ВСЕЙ папки ассетов после `download_assets` (Figma MCP): SVG-санитайзер, детект пустых экспортов, flood-fill чистка фонов, lossless WebP |
 | `sanitize_svg` | точечная чистка SVG (для папки — process_assets) |
@@ -73,11 +81,16 @@ mobile-gate, `scripts/verify.mjs` (parity-QA), `scripts/extract.py`
 ## Типовой цикл
 
 ```
-scaffold_project (шрифты уже внутри) → get_variable_defs → extract_tokens
-→ (чтение figma-import + pixel-perfect) → разбор фрейма по под-узлам
-→ ОДИН батч download_assets → process_assets → вёрстка → add_animation
-→ npm run verify → get_checklist(qa) → деплой по deploy-vercel.md
+read_knowledge() → scaffold_project (шрифты уже внутри) → get_variable_defs
+→ extract_tokens → разбор фрейма по под-узлам (большие выдачи —
+digest_design_context) → ОДИН батч download_assets → process_assets
+→ вёрстка + parity_check ПОСЛЕ КАЖДОЙ секции → add_animation
+→ npm run verify <url> → get_checklist(qa) → деплой по deploy-vercel.md
 ```
+
+`parity_check` после каждой секции, а не один раз в конце: ошибка в общем
+правиле (размер шрифта, выравнивание ячейки) размножается по всей
+странице, и чем позже её ловишь, тем дороже.
 
 ## Хостинг (HTTP-режим)
 
@@ -97,8 +110,13 @@ Let's Encrypt resolver `myresolver`). Host-порт наружу не публи
 
 Эндпоинты: `POST /mcp` (Streamable HTTP, stateless), `GET /dl/…`
 (тарбол скаффолда, TTL 30 мин), `POST /process…` (round-trip обработка
-ассетов), `GET /healthz`. В HTTP-режиме файловые тулы отдают готовые
-curl-команды/контент — агент применяет их локально одной операцией.
+ассетов), `POST /digest…` (сжатие выдачи Figma MCP, текст → текст),
+`POST /parity…` (бленд-дифф двух PNG, tar.gz → текст), `GET /healthz`.
+В HTTP-режиме файловые тулы отдают готовые curl-команды/контент — агент
+применяет их локально одной операцией.
+
+При включённом `PROTO_AUTH_TOKEN` все три round-trip эндпоинта получают
+тот же неугадываемый суффикс `-<hash>`, что и `/process`.
 
 ## Разработка
 

@@ -87,14 +87,15 @@ try {
   const tools = await rpc("tools/list");
   const names = tools.tools.map((t) => t.name).sort();
   const expected = [
-    "add_animation", "extract_tokens", "get_checklist", "install_fonts",
-    "process_assets", "register_dashboard", "sanitize_svg", "scaffold_project",
+    "add_animation", "digest_design_context", "extract_tokens", "get_checklist",
+    "install_fonts", "parity_check", "process_assets", "read_knowledge",
+    "register_dashboard", "sanitize_svg", "scaffold_project",
   ];
-  check(`tools/list = 8 (${names.join(", ")})`, JSON.stringify(names) === JSON.stringify(expected));
+  check(`tools/list = 11 (${names.join(", ")})`, JSON.stringify(names) === JSON.stringify(expected));
 
   // ── resources / prompts ──
   const res = await rpc("resources/list");
-  check("resources/list = 12 документов", res.resources.length === 12, `получено ${res.resources.length}`);
+  check("resources/list = 13 документов", res.resources.length === 13, `получено ${res.resources.length}`);
   const stackDoc = await rpc("resources/read", { uri: "alfa://knowledge/stack-choice" });
   check("stack-choice: спросить пользователя + core-ds", stackDoc.contents[0].text.includes("@alfalab/core-components"));
   const canon = await rpc("resources/read", { uri: "alfa://knowledge/animation-canon" });
@@ -109,6 +110,79 @@ try {
   );
   const prompts = await rpc("prompts/list");
   check("prompts/list = 5", prompts.prompts.length === 5, `получено ${prompts.prompts.length}`);
+
+  // ── read_knowledge: каноны тулом (ресурсы читают не все клиенты) ──
+  const kIndex = await rpc("tools/call", { name: "read_knowledge", arguments: {} });
+  check("read_knowledge() = оглавление", text(kIndex).includes("table-import"));
+  const kTable = await rpc("tools/call", { name: "read_knowledge", arguments: { name: "table-import" } });
+  check("read_knowledge(table-import)", text(kTable).includes("Полоса ячеек шире карточки"));
+  const kBad = await rpc("tools/call", { name: "read_knowledge", arguments: { name: "нет-такого" } });
+  check("read_knowledge: неизвестный документ → ошибка со списком", text(kBad).includes("Доступные:"));
+
+  // ── digest_design_context: сжатие выдачи Figma MCP ──
+  const rowsSrc = `
+    <div className="absolute bg-[rgba(38,55,88,0.04)] h-[49px] left-[6px] right-[6px] rounded-[12px] top-[109px]" data-name="[D] BodyRow :: Wide">
+      <div className="flex w-[52.001px] pl-[16px] pr-[12px] py-[12px]" data-name="[D] BodyControlCell :: Wide"></div>
+      <div className="flex flex-[1_0_0] pl-[10px] pr-[12px] py-[12px]" data-name="[D] BodyCell :: Wide"><p className="x">ООО «Ромашка»</p></div>
+      <div className="flex w-[132px] pl-[10px] pr-[12px] py-[12px]" data-name="[D] BodyCell :: Wide"><p className="x">15.01.2025</p></div>
+    </div>
+    <div className="absolute h-[49px] left-0 right-[-2px] top-[158px]" data-name="[D] BodyRow :: Wide">
+      <div className="flex w-[52.001px]" data-name="[D] BodyControlCell :: Wide"></div>
+      <div className="flex flex-[1_0_0]" data-name="[D] BodyCell :: Wide"><p className="x">ЗАО «Вектор»</p></div>
+      <div className="flex w-[132px]" data-name="[D] BodyCell :: Wide"><p className="x">20.02.2025</p></div>
+    </div>
+    <div className="absolute h-[49px] left-[6px] right-[6px] top-[207px]" data-name="[D] BodyRow :: Wide">
+      <div className="flex w-[52.001px]" data-name="[D] BodyControlCell :: Wide"></div>
+      <div className="flex flex-[1_0_0]" data-name="[D] BodyCell :: Wide"><p className="x">ИП «Куб»</p></div>
+      <div className="flex w-[132px]" data-name="[D] BodyCell :: Wide"><p className="x">10.04.2025</p></div>
+    </div>`;
+  const dRows = await rpc("tools/call", {
+    name: "digest_design_context",
+    arguments: { content: rowsSrc, mode: "rows" },
+  });
+  check("digest(rows): нашёл повтор строк", text(dRows).includes("«[D] BodyRow :: Wide» × 3"));
+  check("digest(rows): ширины ячеек не съехали", text(dRows).includes("ширина 52.001px"));
+  check("digest(rows): матрица текстов", text(dRows).includes("ЗАО «Вектор»"));
+  check("digest(rows): зебра видна по подложке", text(dRows).includes("rgba(38,55,88,0.04)"));
+
+  const layoutSrc = [
+    '<frame id="1:1" name="Root" x="0" y="0" width="1600" height="900">',
+    '  <frame id="1:2" name="Row" x="0" y="0" width="100" height="49">',
+    '  </frame>',
+    '  <frame id="1:3" name="Row" x="0" y="49" width="100" height="49">',
+    '  </frame>',
+    '  <frame id="1:4" name="Row" x="0" y="98" width="100" height="49">',
+    '  </frame>',
+    "</frame>",
+  ].join("\n");
+  const dLayout = await rpc("tools/call", {
+    name: "digest_design_context",
+    arguments: { content: layoutSrc, mode: "layout" },
+  });
+  check("digest(layout): повторы схлопнуты", text(dLayout).includes("3× frame «Row»"));
+  check("digest(layout): шаг посчитан", text(dLayout).includes("шаг y=49"));
+
+  const textSrc =
+    `<p className="font-['Alfa_Interface_Sans:Medium'] leading-[20px] text-[14px] ` +
+    `text-[color:var(--text/primary,rgba(3,3,6,0.88))] tracking-[var(--medium_letter_spacing/14,0.07px)]">Выписка</p>`;
+  const dText = await rpc("tools/call", {
+    name: "digest_design_context",
+    arguments: { content: textSrc, mode: "text" },
+  });
+  check("digest(text): сигнатура шрифта", text(dText).includes("Alfa Interface Sans Medium · 14/20"));
+
+  const dNoInput = await rpc("tools/call", { name: "digest_design_context", arguments: {} });
+  check("digest: без file/content → внятная ошибка", text(dNoInput).includes("передай file"));
+
+  // ── parity_check: без входа объясняет, что нужно ──
+  const pNoInput = await rpc("tools/call", { name: "parity_check", arguments: {} });
+  check("parity_check: без входа → подсказка", text(pNoInput).includes("get_screenshot"));
+  const pScript = await rpc("tools/call", {
+    name: "parity_check",
+    arguments: { url: "http://localhost:3000/", reference: "https://example.test/ref.png", width: 1600, height: 1411 },
+  });
+  check("parity_check: отдал скрипт со снятием кадров", text(pScript).includes("--window-size=1600,1411"));
+  check("parity_check: предупредил про ревил", text(pScript).includes("канон-ревил"));
 
   // ── get_checklist / add_animation ──
   const cl = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "qa" } });

@@ -12,6 +12,9 @@ import { registerTokens } from "./tools/tokens.js";
 import { registerAnimations } from "./tools/animations.js";
 import { registerDashboards } from "./tools/dashboards.js";
 import { registerChecklist } from "./tools/checklist.js";
+import { registerKnowledge } from "./tools/knowledge.js";
+import { registerDigest } from "./tools/digest.js";
+import { registerParity } from "./tools/parity.js";
 
 /* Сборка MCP-сервера (общая для stdio и http). В http-режиме инстанс
    создаётся на каждый запрос (stateless) — все тулы без состояния. */
@@ -51,13 +54,32 @@ export function buildServer(ctx: ServerCtx): McpServer {
 Работает В ПАРЕ с официальным Figma MCP: данные и ассеты макета — оттуда
 (get_design_context / get_variable_defs / download_assets), обработка и
 каноны — отсюда. Токены Figma не нужны.
+КАНОНЫ ЧИТАЙ ТУЛОМ read_knowledge (без аргументов — оглавление). Ресурсы
+alfa://knowledge/* поддерживают не все клиенты; если ресурс не читается,
+это НЕ повод работать без канонов — есть тул.
+ВСЕ ФАЙЛОВЫЕ ТУЛЫ В КОМАНДНОМ РЕЖИМЕ (удалённый хостинг) НИЧЕГО НЕ ПИШУТ
+НА ДИСК АГЕНТА: scaffold_project отдаёт curl на tgz, extract_tokens —
+готовый CSS текстом, process_assets/digest/parity — команды. Ответ такого
+тула читать как ИНСТРУКЦИЮ К ВЫПОЛНЕНИЮ, а не как отчёт о сделанном;
+пустая директория после scaffold_project — это норма, а не ошибка.
 ПЕРЕД scaffold_project ОБЯЗАТЕЛЬНО спроси пользователя, на чём собирать
 прототип (не выбирай сам): чистый HTML/CSS (static — максимальная
 скорость pixel-perfect) или React/Next.js (next — масштабируемость,
 панель tools, компоненты core-ds). Критерии: alfa://knowledge/stack-choice.
-Перед задачей читай гайд: начни с alfa://knowledge/index.
+Исключение: пользователь сам попросил панель tools — стек предопределён
+(next), тогда не открывать выбор, а подтвердить одной фразой.
+Перед задачей читай гайд: read_knowledge() → дальше нужные документы.
 Типовой старт: (вопрос про стек) → scaffold_project (шрифты ставятся
 сразу) → extract_tokens → download_assets → process_assets → вёрстка.
+ВЫДАЧА FIGMA MCP НЕ ВЛЕЗЛА В ЛИМИТ И СОХРАНЕНА В ФАЙЛ — не писать разовый
+парсер, звать digest_design_context на этот файл (сжимает до 2–5%).
+Дашборды Альфы — это таблицы, а get_design_context разворачивает каждую
+из 7–20 одинаковых строк целиком; порядок работы с таблицей —
+read_knowledge table-import.
+ПОСЛЕ КАЖДОЙ свёрстанной секции — parity_check против эталона
+get_screenshot, а не один раз в конце: ошибка в общем правиле (размер
+шрифта, выравнивание ячейки) размножается по всей странице, и чем позже
+её ловишь, тем дороже. Глазами такие дефекты не видны.
 ЕСЛИ FIGMA MCP НЕ ОТДАЛ ДАННЫЕ (не подключён, ошибка, нет доступа) —
 СТОП: не верстать по скриншоту молча. Сказать пользователю причину,
 порекомендовать включить Figma MCP (точные значения, переменные, экспорт
@@ -78,7 +100,10 @@ static, а нужна панель — НЕ мигрируй сам на next: �
   );
 
   registerResources(server);
+  registerKnowledge(server);
   registerPrompts(server);
+  registerDigest(server, ctx);
+  registerParity(server, ctx);
   registerScaffold(server, ctx);
   registerAssets(server, ctx);
   registerFonts(server, ctx);

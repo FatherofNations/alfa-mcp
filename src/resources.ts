@@ -10,8 +10,10 @@ import { KNOWLEDGE_DIR } from "./lib/paths.js";
 
 const DESCRIPTIONS: Record<string, string> = {
   index: "Оглавление базы знаний: какой документ читать перед какой задачей",
-  "figma-import": "Выгрузка данных и ассетов из Figma: обрезка контекста, пустые экспорты, живые node-id",
-  "pixel-perfect": "Методика точной вёрстки: эталон, бленд-дифф, byte-perfect перенос, скриншоты анимаций",
+  "figma-import": "Выгрузка данных и ассетов из Figma: сжатие выдачи, пустые экспорты, живые node-id",
+  "table-import": "Таблицы из макета: сетка колонок и зебра, расхождения шапки и тела, невидимые пробелы",
+  "stack-choice": "Выбор стека перед scaffold_project: static или next, критерии и практики",
+  "pixel-perfect": "Методика точной вёрстки: parity_check, дифф после каждой секции, byte-perfect перенос",
   "animation-canon": "Канон моушена: кривые, тайминги и 12 готовых рецептов (блюр-ревил, стаггеры, свопы, морфы)",
   "react-patterns": "Перенос статики в Next.js: партиалы, StrictMode, memo, оверлеи и transform/filter",
   "project-structure": "Структура скаффолд-проекта и правила слоёв (CSS, данные, ассеты, роуты)",

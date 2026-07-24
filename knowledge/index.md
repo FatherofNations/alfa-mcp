@@ -3,20 +3,43 @@
 База знаний по разработке интерактивных прототипов по Figma-макетам.
 Каждый документ — конденсат реального опыта. Читай нужный ПЕРЕД задачей.
 
+**Как читать:** тулом `read_knowledge("<имя>")`. Ресурсы
+`alfa://knowledge/*` поддерживают не все клиенты — если ресурс не
+читается, это НЕ повод работать без канонов, есть тул.
+
 | Ресурс | Когда читать |
 |---|---|
-| `alfa://knowledge/stack-choice` | ПЕРВЫМ, перед scaffold_project: спросить пользователя про стек (static/next), критерии и практики |
-| `alfa://knowledge/figma-import` | перед разбором макета: выгрузка данных/ассетов из Figma, все грабли; нет данных из MCP → СТОП, спросить пользователя |
-| `alfa://knowledge/pixel-perfect` | перед вёрсткой: методика точного переноса, бленд-диффы |
-| `alfa://knowledge/animation-canon` | перед любым моушеном: канонические кривые/тайминги, 12 рецептов |
-| `alfa://knowledge/react-patterns` | перенос статики в Next.js: партиалы, StrictMode, оверлеи |
-| `alfa://knowledge/project-structure` | что где лежит в скаффолд-проекте, правила слоёв |
-| `alfa://knowledge/tools-panel` | панель прототипа: рамка-обрезка, board/board-body, свопы |
-| `alfa://knowledge/deep-links` | состояние в URL: replaceState, чтение на маунте |
-| `alfa://knowledge/deploy-vercel` | перед деплоем: framework preset, protection, promote |
-| `alfa://knowledge/verification` | перед сдачей: parity-QA чек-лист, программный проклик |
-| `alfa://knowledge/design-system` | шрифты/иконки/токены core-ds |
+| `stack-choice` | ПЕРВЫМ, перед scaffold_project: спросить пользователя про стек (static/next), критерии и практики |
+| `figma-import` | перед разбором макета: выгрузка данных/ассетов, все грабли; нет данных из MCP → СТОП, спросить пользователя |
+| `table-import` | перед разбором ЛЮБОЙ таблицы: сжатие выдачи, сетка колонок, зебра, расхождения шапки и тела |
+| `pixel-perfect` | перед вёрсткой: методика точного переноса, parity_check, дифф после КАЖДОЙ секции |
+| `animation-canon` | перед любым моушеном: канонические кривые/тайминги, 12 рецептов |
+| `react-patterns` | перенос статики в Next.js: партиалы, StrictMode, оверлеи |
+| `project-structure` | что где лежит в скаффолд-проекте, правила слоёв |
+| `tools-panel` | панель прототипа: рамка-обрезка, board/board-body, свопы |
+| `deep-links` | состояние в URL: replaceState, чтение на маунте |
+| `deploy-vercel` | перед деплоем: framework preset, protection, promote |
+| `verification` | перед сдачей: parity-QA чек-лист, программный проклик, три ложных срабатывания |
+| `design-system` | шрифты/иконки/токены core-ds |
 
 Типовой цикл «новый дашборд по фрейму»: stack-choice (спросить
-пользователя) → figma-import → pixel-perfect → (вёрстка) →
-animation-canon → verification → deploy-vercel.
+пользователя) → figma-import → table-import (если есть таблицы) →
+pixel-perfect → (вёрстка + parity_check по секциям) → animation-canon →
+verification → deploy-vercel.
+
+## Что делают тулы-помощники
+
+| Тул | Зачем |
+|---|---|
+| `read_knowledge` | эти документы текстом (работает там, где ресурсы недоступны) |
+| `digest_design_context` | сжать выдачу Figma MCP, не влезшую в лимит, до 1–3% |
+| `parity_check` | попиксельная сверка рендера с эталоном: смещения текстовых ранов |
+| `scaffold_project` | проект-прототип (шрифты, хром, панель tools) |
+| `extract_tokens` | get_variable_defs → styles/tokens.css |
+| `process_assets` | санитайз SVG, растеризация, webp — одной операцией на папку |
+| `get_checklist` | чек-лист стадии перед сдачей |
+
+**В командном режиме** (удалённый хостинг) файловые тулы НИЧЕГО не пишут
+на диск: возвращают curl-команды и контент. Ответ такого тула — это
+инструкция к выполнению, а не отчёт о сделанном; пустая директория после
+`scaffold_project` — норма.

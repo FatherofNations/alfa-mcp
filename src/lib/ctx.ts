@@ -13,6 +13,10 @@ export interface ServerCtx {
   publish: (filePath: string, name: string) => string;
   /** http: URL эндпоинта пост-процессинга ассетов */
   processUrl: string;
+  /** http: URL эндпоинта сжатия выдачи Figma MCP */
+  digestUrl: string;
+  /** http: URL эндпоинта бленд-диффа с эталоном */
+  parityUrl: string;
 }
 
 export const stdioCtx: ServerCtx = {
@@ -22,4 +26,6 @@ export const stdioCtx: ServerCtx = {
     throw new Error("publish недоступен в stdio-режиме");
   },
   processUrl: "",
+  digestUrl: "",
+  parityUrl: "",
 };

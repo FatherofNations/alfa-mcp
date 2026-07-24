@@ -9,11 +9,15 @@ import { buildServer } from "./app.js";
 import { ServerCtx } from "./lib/ctx.js";
 import { PKG_ROOT } from "./lib/paths.js";
 import { processAssetsDir, ProcessOptions } from "./lib/process.js";
+import { digest, DigestMode } from "./lib/digest.js";
+import { parity } from "./lib/parity.js";
 
 /* Streamable HTTP хостинг (stateless): один сервер на команду.
    Дополнительные эндпоинты:
    - GET /dl/<id>/<name>  — скачивание артефактов (тарбол скаффолда), TTL 30 мин;
    - POST /process        — round-trip обработка папки ассетов (tar.gz → tar.gz);
+   - POST /digest         — сжатие выдачи Figma MCP (текст → текст);
+   - POST /parity         — бленд-дифф двух PNG (tar.gz → текст);
    - GET /healthz.
    Auth: env PROTO_AUTH_TOKEN → Bearer на /mcp; /dl и /process защищены
    неугадываемыми путями (uuid / суффикс из хеша токена), чтобы curl-команды
@@ -43,6 +47,8 @@ export function startHttp(port: number) {
     ? "-" + crypto.createHash("sha256").update(authToken).digest("hex").slice(0, 16)
     : "";
   const processRoute = `/process${processSuffix}`;
+  const digestRoute = `/digest${processSuffix}`;
+  const parityRoute = `/parity${processSuffix}`;
 
   const app = express();
   app.disable("x-powered-by");
@@ -83,6 +89,8 @@ export function startHttp(port: number) {
       mode: "http",
       baseUrl: base,
       processUrl: `${base}${processRoute}`,
+      digestUrl: `${base}${digestRoute}`,
+      parityUrl: `${base}${parityRoute}`,
       publish: (filePath, name) => {
         const id = crypto.randomUUID();
         downloads.set(id, { path: filePath, name, expires: Date.now() + DL_TTL_MS });
@@ -166,6 +174,75 @@ export function startHttp(port: number) {
       } catch (e) {
         fs.rmSync(tmp, { recursive: true, force: true });
         res.status(400).send(`process failed: ${String(e)}`);
+      }
+    }
+  );
+
+  // ── сжатие выдачи Figma MCP: сырой текст → дайджест текстом ──
+  app.post(
+    digestRoute,
+    express.raw({ type: () => true, limit: "64mb" }),
+    (req, res) => {
+      try {
+        const raw = (req.body as Buffer).toString("utf8");
+        if (!raw.trim()) {
+          res.status(400).type("text/plain; charset=utf-8").send("пустое тело запроса");
+          return;
+        }
+        const mode = (typeof req.query.mode === "string" ? req.query.mode : "auto") as DigestMode;
+        const depth = Number(req.query.depth) || 3;
+        res
+          .type("text/plain; charset=utf-8")
+          .send(digest(raw, mode, depth).join("\n") + "\n");
+      } catch (e) {
+        res.status(400).type("text/plain; charset=utf-8").send(`digest failed: ${String(e)}`);
+      }
+    }
+  );
+
+  // ── бленд-дифф: tar.gz с двумя PNG → текстовый отчёт ──
+  app.post(
+    parityRoute,
+    express.raw({ type: () => true, limit: "100mb" }),
+    async (req, res) => {
+      const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pf-parity-"));
+      try {
+        const inTgz = path.join(tmp, "in.tgz");
+        fs.writeFileSync(inTgz, req.body as Buffer);
+        const work = path.join(tmp, "png");
+        fs.mkdirSync(work);
+        execFileSync("tar", ["xzf", inTgz, "-C", work]);
+
+        const pngs = fs
+          .readdirSync(work)
+          .filter((f) => /\.png$/i.test(f))
+          .sort();
+        if (pngs.length < 2) throw new Error(`нужны два PNG, пришло ${pngs.length}`);
+        const refName = typeof req.query.ref === "string" ? req.query.ref : pngs[0];
+        const ref = pngs.includes(refName) ? refName : pngs[0];
+        const local = pngs.find((f) => f !== ref)!;
+
+        const ignore =
+          typeof req.query.ignore === "string" && req.query.ignore
+            ? req.query.ignore.split(";").map((r) => {
+                const [x, y, w, h] = r.split(",").map(Number);
+                return { x, y, w, h };
+              })
+            : [];
+        const report = await parity(
+          fs.readFileSync(path.join(work, ref)),
+          fs.readFileSync(path.join(work, local)),
+          { threshold: Number(req.query.thr) || 32, ignore }
+        );
+        res
+          .type("text/plain; charset=utf-8")
+          .send(
+            [`эталон: ${ref}, локальный: ${local}`, ...report.lines].join("\n") + "\n"
+          );
+      } catch (e) {
+        res.status(400).type("text/plain; charset=utf-8").send(`parity failed: ${String(e)}`);
+      } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
       }
     }
   );
