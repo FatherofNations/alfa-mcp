@@ -185,8 +185,10 @@ try {
   fs.mkdirSync(pdir);
   await mkPng(path.join(pdir, "a-ref.png"), 0);
   await mkPng(path.join(pdir, "b-local.png"), 25); // заведомый сдвиг на 25px
-  // AppleDouble от macOS-tar: имя на .png, а картинки внутри нет.
-  // Сервер обязан их отбросить, иначе sharp падает на первом же.
+  // AppleDouble: имя на .png, картинки внутри нет — сервер обязан их
+  // отбросить. Работает как проверка только на Linux (в CI): macOS-tar
+  // склеивает «._*» обратно в xattr и в архив их не кладёт, поэтому
+  // основное покрытие даёт юнит на pickPngPair в smoke.mjs.
   fs.writeFileSync(path.join(pdir, "._a-ref.png"), Buffer.from("Mac OS X mess"));
   fs.writeFileSync(path.join(pdir, "._b-local.png"), Buffer.from("Mac OS X mess"));
   const pTgz = path.join(tmp, "parity.tgz");

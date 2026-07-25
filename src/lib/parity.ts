@@ -270,3 +270,19 @@ export async function parity(
   );
   return { lines, diffRatio, meanAbs };
 }
+
+/** Выбор пары кадров из распакованного тарбола.
+    Отдельной функцией, потому что тут два подвоха, и оба ловятся только
+    тестом, а не глазами:
+    - «._имя» — AppleDouble от macOS-tar (`tar czf` без COPYFILE_DISABLE
+      кладёт их рядом с каждым файлом, у которого есть xattr). Имя
+      кончается на .png, картинки внутри нет, sharp падает с
+      «unsupported image format». Отсекаем любые точечные файлы;
+    - тарбол мог быть собран человеком в любом порядке, поэтому эталон
+      выбираем по имени из ?ref=, а не по позиции. */
+export function pickPngPair(files: string[], refName?: string) {
+  const pngs = files.filter((f) => /\.png$/i.test(f) && !f.startsWith(".")).sort();
+  if (pngs.length < 2) throw new Error(`нужны два PNG, пришло ${pngs.length}`);
+  const ref = refName && pngs.includes(refName) ? refName : pngs[0];
+  return { ref, local: pngs.find((f) => f !== ref)! };
+}

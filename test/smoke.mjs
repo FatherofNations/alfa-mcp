@@ -184,6 +184,32 @@ try {
   check("parity_check: отдал скрипт со снятием кадров", text(pScript).includes("--window-size=1600,1411"));
   check("parity_check: предупредил про ревил", text(pScript).includes("канон-ревил"));
 
+  /* Выбор пары кадров — напрямую: через тарбол это не проверить, на macOS
+     bsdtar склеивает «._*» обратно в xattr и на записи, и на чтении, так
+     что подложить их в архив системным tar невозможно. */
+  const { pickPngPair } = await import("../dist/lib/parity.js");
+  const pair = pickPngPair(["._b-local.png", "._a-ref.png", "a-ref.png", "b-local.png"], "a-ref.png");
+  check(
+    "pickPngPair: AppleDouble «._*» отброшены",
+    pair.ref === "a-ref.png" && pair.local === "b-local.png",
+    JSON.stringify(pair)
+  );
+  check(
+    "pickPngPair: ?ref= выбирает эталон, а не порядок",
+    JSON.stringify(pickPngPair(["a.png", "b.png"], "b.png")) === '{"ref":"b.png","local":"a.png"}'
+  );
+  check(
+    "pickPngPair: неизвестный ref → первый по алфавиту",
+    pickPngPair(["a.png", "b.png"], "нет.png").ref === "a.png"
+  );
+  let pairErr = "";
+  try {
+    pickPngPair(["._a.png", "a.png"], "a.png");
+  } catch (e) {
+    pairErr = e.message;
+  }
+  check("pickPngPair: один живой PNG → ошибка", pairErr.includes("пришло 1"), pairErr);
+
   // ── get_checklist / add_animation ──
   const cl = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "qa" } });
   check("get_checklist(qa)", text(cl).includes("naturalWidth"));

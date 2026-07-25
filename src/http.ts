@@ -10,7 +10,7 @@ import { ServerCtx } from "./lib/ctx.js";
 import { PKG_ROOT } from "./lib/paths.js";
 import { processAssetsDir, ProcessOptions } from "./lib/process.js";
 import { digest, DigestMode } from "./lib/digest.js";
-import { parity } from "./lib/parity.js";
+import { parity, pickPngPair } from "./lib/parity.js";
 
 /* Streamable HTTP хостинг (stateless): один сервер на команду.
    Дополнительные эндпоинты:
@@ -213,18 +213,10 @@ export function startHttp(port: number) {
         fs.mkdirSync(work);
         execFileSync("tar", ["xzf", inTgz, "-C", work]);
 
-        // «._имя» — AppleDouble от macOS-tar: расширение .png у них есть,
-        // а картинки внутри нет, и sharp падает на «unsupported image
-        // format». Команда тула ставит COPYFILE_DISABLE=1, но тарбол мог
-        // собрать и человек — отсекаем любые точечные файлы.
-        const pngs = fs
-          .readdirSync(work)
-          .filter((f) => /\.png$/i.test(f) && !f.startsWith("."))
-          .sort();
-        if (pngs.length < 2) throw new Error(`нужны два PNG, пришло ${pngs.length}`);
-        const refName = typeof req.query.ref === "string" ? req.query.ref : pngs[0];
-        const ref = pngs.includes(refName) ? refName : pngs[0];
-        const local = pngs.find((f) => f !== ref)!;
+        const { ref, local } = pickPngPair(
+          fs.readdirSync(work),
+          typeof req.query.ref === "string" ? req.query.ref : undefined
+        );
 
         const ignore =
           typeof req.query.ignore === "string" && req.query.ignore
