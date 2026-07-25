@@ -185,6 +185,10 @@ try {
   fs.mkdirSync(pdir);
   await mkPng(path.join(pdir, "a-ref.png"), 0);
   await mkPng(path.join(pdir, "b-local.png"), 25); // заведомый сдвиг на 25px
+  // AppleDouble от macOS-tar: имя на .png, а картинки внутри нет.
+  // Сервер обязан их отбросить, иначе sharp падает на первом же.
+  fs.writeFileSync(path.join(pdir, "._a-ref.png"), Buffer.from("Mac OS X mess"));
+  fs.writeFileSync(path.join(pdir, "._b-local.png"), Buffer.from("Mac OS X mess"));
   const pTgz = path.join(tmp, "parity.tgz");
   execFileSync("tar", ["-C", pdir, "-czf", pTgz, "."]);
   const parRes = await fetch(`${BASE}/parity${suffix}?ref=a-ref.png`, {
@@ -195,7 +199,33 @@ try {
   check("parity: 200", parRes.ok, String(parRes.status));
   const parText = await parRes.text();
   check("parity: эталон определён", parText.includes("эталон: a-ref.png"));
+  check(
+    "parity: AppleDouble «._*» отброшены",
+    parText.includes("локальный: b-local.png"),
+    parText.slice(0, 200)
+  );
   check("parity: сдвиг 25px найден", parText.includes("сдвиг +25px"), parText.slice(0, 400));
+  // команды тула: без COPYFILE_DISABLE macOS-tar кладёт «._*» и ломает
+  // sharp; в ветке «два готовых файла» query обязан начинаться с ?ref=
+  const pCmd = await rpc(
+    "tools/call",
+    {
+      name: "parity_check",
+      arguments: { url: "http://localhost:3000/", reference: "https://example.test/r.png" },
+    },
+    8
+  );
+  check("parity_check: команда с COPYFILE_DISABLE", text(pCmd).includes("COPYFILE_DISABLE=1 tar czf"));
+  const pFiles = await rpc(
+    "tools/call",
+    { name: "parity_check", arguments: { referenceFile: "a/ref.png", localFile: "b/loc.png" } },
+    9
+  );
+  const pf = text(pFiles);
+  check("parity_check (файлы): COPYFILE_DISABLE", pf.includes("COPYFILE_DISABLE=1 tar czf"));
+  check("parity_check (файлы): query с ?ref=", pf.includes("/parity") && /\?ref=/.test(pf), pf.slice(0, 300));
+  check("parity_check (файлы): нет «&ref=» без «?»", !/parity[a-z0-9-]*&ref=/.test(pf));
+
   const parBad = await fetch(`${BASE}/parity${suffix}`, {
     method: "POST",
     headers: { "Content-Type": "application/gzip" },

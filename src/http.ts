@@ -213,9 +213,13 @@ export function startHttp(port: number) {
         fs.mkdirSync(work);
         execFileSync("tar", ["xzf", inTgz, "-C", work]);
 
+        // «._имя» — AppleDouble от macOS-tar: расширение .png у них есть,
+        // а картинки внутри нет, и sharp падает на «unsupported image
+        // format». Команда тула ставит COPYFILE_DISABLE=1, но тарбол мог
+        // собрать и человек — отсекаем любые точечные файлы.
         const pngs = fs
           .readdirSync(work)
-          .filter((f) => /\.png$/i.test(f))
+          .filter((f) => /\.png$/i.test(f) && !f.startsWith("."))
           .sort();
         if (pngs.length < 2) throw new Error(`нужны два PNG, пришло ${pngs.length}`);
         const refName = typeof req.query.ref === "string" ? req.query.ref : pngs[0];

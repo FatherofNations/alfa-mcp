@@ -64,11 +64,14 @@ export function registerParity(server: McpServer, ctx: ServerCtx) {
           return ok([
             "# parity_check (командный режим): выполни команду",
             "```bash",
-            `tar czf /tmp/pf-parity.tgz -C "$(dirname "${referenceFile}")" "$(basename "${referenceFile}")" \\`,
+            // COPYFILE_DISABLE=1 — иначе macOS кладёт в тарбол AppleDouble
+            // «._имя», и sharp падает на них: unsupported image format
+            `COPYFILE_DISABLE=1 tar czf /tmp/pf-parity.tgz \\`,
+            `  -C "$(dirname "${referenceFile}")" "$(basename "${referenceFile}")" \\`,
             `  -C "$(dirname "${localFile}")" "$(basename "${localFile}")" \\`,
             `  && curl -fsS -X POST --data-binary @/tmp/pf-parity.tgz \\`,
             `       -H "Content-Type: application/gzip" \\`,
-            `       "${ctx.parityUrl}${q.size ? `?${q}` : ""}&ref=$(basename "${referenceFile}")" \\`,
+            `       "${ctx.parityUrl}?ref=$(basename "${referenceFile}")${q.size ? `&${q}` : ""}" \\`,
             `  && rm /tmp/pf-parity.tgz`,
             "```",
           ]);
@@ -107,7 +110,8 @@ export function registerParity(server: McpServer, ctx: ServerCtx) {
       ];
       if (ctx.mode === "http") {
         script.push(
-          "tar czf /tmp/pf-parity.tgz -C /tmp pf-ref.png pf-local.png \\",
+          // COPYFILE_DISABLE=1 — см. выше: AppleDouble «._имя» ломает sharp
+          "COPYFILE_DISABLE=1 tar czf /tmp/pf-parity.tgz -C /tmp pf-ref.png pf-local.png \\",
           `  && curl -fsS -X POST --data-binary @/tmp/pf-parity.tgz \\`,
           `       -H "Content-Type: application/gzip" "${ctx.parityUrl}?ref=pf-ref.png${q.size ? `&${q}` : ""}"`
         );
