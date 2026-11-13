@@ -108,7 +108,7 @@ ${sel}.dash-out {
   transition-delay: 0s;
 }`,
     howto: [
-      "Роут менять по таймеру 250ms после навешивания dash-out (контент уже прозрачен).",
+      "Use actual exit completion before replacing content; use a timeout only for bounded recovery.",
       "По приезде снять класс через двойной requestAnimationFrame.",
       "НЕ анимировать равномерным блюром без ухода в 0 — подмена контента видна (проверено).",
     ],
@@ -169,7 +169,7 @@ ${sel} { transform: translate(var(--mx, 0px), var(--my, 0px)); }`,
         `JS: mousemove + rAF-троттл; радиус ${radius}px; смещение dx*0.06*f с clamp ±8/±6px; писать в --mx/--my.`,
         "Выключать при :active и при открытых оверлеях.",
         "Если на элементе есть keyframe с transform (pop) — обнулить --mx/--my ПЕРЕД запуском.",
-        "Готовый JS-сниппет — в alfa://knowledge/animation-canon, рецепт 11.",
+        "Implement a scoped, cancellable pointer controller from the motion contract.",
       ],
     };
   },
@@ -197,7 +197,7 @@ export function registerAnimations(server: McpServer) {
       title: "Канон-анимация под селектор",
       description:
         "Генерирует CSS-рецепт из канона (alfa://knowledge/animation-canon) под " +
-        "конкретный селектор + инструкцию подключения. Кривые/тайминги канонические. " +
+        "конкретный селектор + инструкцию подключения. These are optional defaults; authored motion and user requirements take precedence. " +
         "CSS вставь в styles/app.css (или файл страницы).",
       inputSchema: {
         recipe: z
@@ -232,7 +232,7 @@ export function registerAnimations(server: McpServer) {
         "## Подключение",
         ...howto.map((h, i) => `${i + 1}. ${h}`),
         "",
-        "Значения канонические — не менять без фиксации в animation-canon.",
+        "Preset values are optional defaults. Follow the motion contract; verify intermediate frames and playback.",
       ]);
     }
   );

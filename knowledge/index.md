@@ -1,45 +1,26 @@
-# alfa-mcp knowledge — оглавление
+# Prototype implementation policy
 
-База знаний по разработке интерактивных прототипов по Figma-макетам.
-Каждый документ — конденсат реального опыта. Читай нужный ПЕРЕД задачей.
+Follow the user's explicit requirements and existing project decisions. Do not ask again for a chosen stack, authorized implementation detail, or accepted deviation.
+For new Alfa prototypes, default to Next.js App Router, React and TypeScript; preserve an existing stack unless migration is requested.
+Use the exact design font, weights, assets and geometry. Brand substitutions require an explicit project decision and must be recorded as deviations.
+Treat Figma structure and motion as separate inputs. Figma MCP supplies design data; this toolkit supplies workflow and helpers, not an automatic Figma compiler.
+Use design context first; metadata is for navigation or incomplete/truncated responses. Discover actual tool capabilities rather than assuming transport-specific features.
+Use native React components for new interfaces. HTML injection is a bounded legacy migration technique, not the default architecture.
+Use motion sources in this order: explicit user direction, authored Figma motion, approved reference, documented project defaults.
+Presets are optional starting points. Never invent motion on a node when reproducing authored motion.
+Validate static fidelity, functional behavior and motion quality separately. A passing build or matching endpoint is not proof of motion quality.
+Keep original source data, implementation assumptions and QA evidence separate. Never derive expected geometry from the implementation under test.
+Report missing coverage honestly. Do not publish or change access settings unless authorized.
 
-**Как читать:** тулом `read_knowledge("<имя>")`. Ресурсы
-`alfa://knowledge/*` поддерживают не все клиенты — если ресурс не
-читается, это НЕ повод работать без канонов, есть тул.
+## Read only the current stage
+Use read_knowledge when resource URIs are unavailable.
+- figma-import: structure, motion and assets.
+- design-system, pixel-perfect, table-import: exact static implementation.
+- react-patterns, animation-canon: component ownership and choreography.
+- verification: independent static, behavior and motion evidence.
+- stack-choice, project-structure, tools-panel, deep-links, deploy-vercel: only as needed.
 
-| Ресурс | Когда читать |
-|---|---|
-| `stack-choice` | ПЕРВЫМ, перед scaffold_project: спросить пользователя про стек (static/next), критерии и практики |
-| `figma-import` | перед разбором макета: выгрузка данных/ассетов, все грабли; нет данных из MCP → СТОП, спросить пользователя |
-| `table-import` | перед разбором ЛЮБОЙ таблицы: сжатие выдачи, сетка колонок, зебра, расхождения шапки и тела |
-| `pixel-perfect` | перед вёрсткой: методика точного переноса, parity_check, дифф после КАЖДОЙ секции |
-| `animation-canon` | перед любым моушеном: канонические кривые/тайминги, 12 рецептов |
-| `react-patterns` | перенос статики в Next.js: партиалы, StrictMode, оверлеи |
-| `project-structure` | что где лежит в скаффолд-проекте, правила слоёв |
-| `tools-panel` | панель прототипа: рамка-обрезка, board/board-body, свопы |
-| `deep-links` | состояние в URL: replaceState, чтение на маунте |
-| `deploy-vercel` | перед деплоем: framework preset, protection, promote |
-| `verification` | перед сдачей: parity-QA чек-лист, программный проклик, три ложных срабатывания |
-| `design-system` | шрифты/иконки/токены core-ds |
-
-Типовой цикл «новый дашборд по фрейму»: stack-choice (спросить
-пользователя) → figma-import → table-import (если есть таблицы) →
-pixel-perfect → (вёрстка + parity_check по секциям) → animation-canon →
-verification → deploy-vercel.
-
-## Что делают тулы-помощники
-
-| Тул | Зачем |
-|---|---|
-| `read_knowledge` | эти документы текстом (работает там, где ресурсы недоступны) |
-| `digest_design_context` | сжать выдачу Figma MCP, не влезшую в лимит, до 1–3% |
-| `parity_check` | попиксельная сверка рендера с эталоном: смещения текстовых ранов |
-| `scaffold_project` | проект-прототип (шрифты, хром, панель tools) |
-| `extract_tokens` | get_variable_defs → styles/tokens.css |
-| `process_assets` | санитайз SVG, растеризация, webp — одной операцией на папку |
-| `get_checklist` | чек-лист стадии перед сдачей |
-
-**В командном режиме** (удалённый хостинг) файловые тулы НИЧЕГО не пишут
-на диск: возвращают curl-команды и контент. Ответ такого тула — это
-инструкция к выполнению, а не отчёт о сделанном; пустая директория после
-`scaffold_project` — норма.
+Figma get_motion_context is a provider capability, not a tool implemented by this server. Inspect availability before using it.
+add_animation returns optional CSS presets, not an authored motion specification or a quality verdict.
+In command mode helper output is a proposed command/content, not proof that files were written.
+Changing this repository does not update an already running MCP deployment or an installed local skill bundle.

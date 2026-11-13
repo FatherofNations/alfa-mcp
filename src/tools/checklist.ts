@@ -6,66 +6,54 @@ import { ok } from "../lib/report.js";
    самопроверки агента перед сдачей этапа. Полные гайды — в resources. */
 
 const CHECKLISTS: Record<string, { doc: string; items: string[] }> = {
-  import: {
-    doc: "alfa://knowledge/figma-import",
-    items: [
-      "Figma MCP отвечает; если нет — СТОП: спросить пользователя и порекомендовать включить MCP, по скриншоту верстать только с явного согласия",
-      "get_metadata по фрейму свежий (node-id из старых сессий не использовать)",
-      "design context собран по под-узлам (лимит ~25k токенов — ничего не обрезано)",
-      "get_variable_defs снят и передан в extract_tokens",
-      "эталонный скриншот фрейма сохранён для диффа",
-      "список ассетов собран заранее → ОДИН батч download_assets (Figma MCP)",
-      "process_assets прогнан сразу после скачивания; пустые экспорты перевыгружены от родителя",
-      "недоступные тексты/узлы зафиксированы в handoff списком отступлений",
-    ],
+  "import": {
+    "doc": "alfa://knowledge/figma-import",
+    "items": [
+      "Complete design data and source version recorded; incomplete responses split by section.",
+      "Actual Figma tool capabilities checked; assets downloaded using supported arguments.",
+      "Fonts, variables, original assets and source IDs recorded.",
+      "Authored motion fetched when available; missing behavior distinguished from static design."
+    ]
   },
-  layout: {
-    doc: "alfa://knowledge/pixel-perfect + react-patterns",
-    items: [
-      "значения (размеры/цвета/шрифты) — из design context, не со скриншота",
-      "крупная статичная разметка перенесена byte-perfect, не «по мотивам»",
-      "font-family каждой зоны сверен с design context (контент может отличаться от хрома)",
-      "бленд-дифф с эталоном: расходится только font-hinting",
-      "React.memo на компонентах с dangerouslySetInnerHTML",
-      "эффекты с полным cleanup (StrictMode дважды); DOM-данные при маунте захардкожены",
-      "оверлеи вне transform-предков; данные в data/*, не в разметке",
-    ],
+  "layout": {
+    "doc": "alfa://knowledge/pixel-perfect",
+    "items": [
+      "Native JSX and stable semantic IDs; legacy HTML only in a bounded migration.",
+      "Exact source fonts and loaded weights verified, or explicit substitution recorded.",
+      "Source-derived geometry and native-size element comparison completed.",
+      "Layout transforms separated from animated transforms; scoped effects have complete cleanup."
+    ]
   },
-  animation: {
-    doc: "alfa://knowledge/animation-canon",
-    items: [
-      "кривые/тайминги — только из канона (появление 0.5s/0.55s, скрытие 0.22s ease-in)",
-      "скрытие быстрее появления (асимметрия) и без задержки",
-      "свапы контента — строго в момент полной прозрачности",
-      "keyframe с transform не конфликтует с магнитом/сдвигами (переменные обнулены)",
-      "z-index выпадашек на контейнере (blur создаёт контекст наложения)",
-      "стаггеры: база 120ms, шаг 30ms; капсулы табов перемеряются на fonts.ready",
-    ],
+  "animation": {
+    "doc": "alfa://knowledge/animation-canon",
+    "items": [
+      "Motion contract identifies source, participants, tracks, timing, clipping and interruption.",
+      "Exact Figma node/instance motion preserved when reproducing authored motion.",
+      "No unintended glyph/image stretching or inferred shared-word identities.",
+      "Intermediate frames and handoff boundaries checked against independent expectations.",
+      "Real-time playback reviewed for rhythm, trajectory, legibility and end continuity.",
+      "Rapid input, resize, slow assets, unmount and reduced motion exercised."
+    ]
   },
-  qa: {
-    doc: "alfa://knowledge/verification",
-    items: [
-      "npm run verify зелёный (роуты 200, ассеты на месте)",
-      "0 битых <img> (naturalWidth !== 0)",
-      "консоль без ошибок и hydration-варнингов",
-      "интерактив прокликан программно (dispatchEvent), не «на глаз»",
-      "тайминги анимаций сэмплированы getComputedStyle",
-      "deep-links: каждое состояние панели открывается прямой ссылкой",
-      "скриншоты сняты ПОСЛЕ DOM-ассертов (доказательство, не метод)",
-    ],
+  "qa": {
+    "doc": "alfa://knowledge/verification",
+    "items": [
+      "Build/types/lint and applicable existing tests run; missing coverage listed separately.",
+      "No broken required assets, browser errors or hydration failures.",
+      "Real pointer and keyboard interaction tested in both directions; deep links and history checked.",
+      "Static, functional and motion verdicts reported separately with reference provenance.",
+      "CSS timing inspection is supplemented with actual animation output and playback."
+    ]
   },
-  deploy: {
-    doc: "alfa://knowledge/deploy-vercel",
-    items: [
-      "vercel.json с {\"framework\":\"nextjs\"} закоммичен",
-      "деплой только по явной команде человека",
-      "rm -rf .next .vercel/output → vercel build --prod (не при живом dev!)",
-      ".vercel/output/builds.json: use = @vercel/next",
-      "vercel deploy --prebuilt --prod; чанки на домене == чанки деплоя (иначе promote)",
-      "ssoProtection выключен при публичном шаринге",
-      "токен CLI не печатается в вывод и не коммитится",
-    ],
-  },
+  "deploy": {
+    "doc": "alfa://knowledge/deploy-vercel",
+    "items": [
+      "Deployment authorized; exact revision and required checks recorded.",
+      "Existing deployment workflow and installed framework version inspected.",
+      "Secrets and unrelated local files excluded.",
+      "Delivered URL and revision verified; access protection preserved unless change is authorized."
+    ]
+  }
 };
 
 export function registerChecklist(server: McpServer) {
