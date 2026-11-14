@@ -5,7 +5,7 @@ When reproducing Figma motion, inspect actual tool availability and load the Fig
 Preserve supplied keyframes, easing, units, per-element origins and coordinated timelines. Match exact node IDs first; use fallback IDs only when needed, scoped to the actual instance. Report unsupported tracks.
 
 ## Write the motion contract
-For each interaction record trigger, semantic participants, source/target states, property tracks, units, easing, duration, delay, coordinate system, clipping, layering, interrupt policy and reduced-motion result.
+For each interaction record trigger, semantic participants, source/target states, property tracks, units, easing, duration, delay, coordinate system, clipping, layering, interruption policy and reduced-motion result.
 Separate authored values from proposed values. For scroll motion record scroll container, start/end positions, pin/release rules and reverse behavior.
 A static frame cannot specify choreography. Choose restrained defaults for authorized unspecified motion, label them as proposals, and ask only if the missing choice materially changes the result.
 
