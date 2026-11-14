@@ -1,91 +1,9 @@
-# stack-choice — выбор стека прототипа
+# Stack selection
+Honor an explicit user choice and the existing project stack without asking again.
+For a new Alfa interactive prototype, default to Next.js App Router, React and TypeScript.
+Use static HTML only when requested or when the deliverable specifically requires file-only execution. Do not migrate an existing static project silently.
+Inspect actual installed versions and scripts. Preserve lockfiles and established styling and animation conventions.
+Do not add a UI library or animation engine merely because the toolkit lists one. Choose based on actual interaction complexity and existing dependencies.
+Tools panels are optional and only added when requested.
+Record the decision once in HANDOFF and reuse it.
 
-> **Первый вопрос пользователю перед scaffold_project.** Выбор между
-> static и next делает ПОЛЬЗОВАТЕЛЬ — агент обязан спросить и не решать
-> сам. Этот документ — критерии для осмысленного ответа и лучшие
-> практики каждого пути.
-
-## Как спросить
-
-«На чём собираем прототип?
-1. **Чистый HTML/CSS** — максимальная скорость pixel-perfect вёрстки,
-   без сборки; идеален для экранов на показ.
-2. **React (Next.js)** — масштабируемее и стабильнее: панель состояний,
-   deep-links, компоненты дизайн-системы core-ds.»
-
-**Исключение: пользователь сам упомянул панель tools.** Тогда стек уже
-предопределён — панель существует только в next. Открывать полноценный
-выбор в этом случае бессмысленно и выглядит так, будто просьбу не
-услышали: подтвердить одной фразой («панель есть только в React-стеке —
-собираю на next») и идти дальше. Спрашивать по-прежнему нужно, если из
-просьбы не следует однозначно, нужна ли панель.
-
-## static — чистый HTML/CSS/JS
-
-**Когда:** 1–3 экрана на показ, срок «вчера», состояния переключать не
-нужно (или хватает пары строк vanilla JS).
-
-**Почему быстро:** нет установки зависимостей и сборки — правка видна по
-F5; вёрстка идёт прямо в html + `styles/app.css`; ничего не отделяет
-design context от строки в файле.
-
-**Лучшие практики скорости без потери качества:**
-
-- Один html на дашборд (`index.html`, `<slug>.html`), общие `styles/`.
-- Значения — только из design context (не со скриншота); переносить
-  разметку **byte-perfect** сразу, не «черновик → чистовик»
-  (см. pixel-perfect.md).
-- Канон-анимации уже подключены: классы `pf-reveal` / `pf-stagger` /
-  `.rv-block` из `canon.css` — не писать свои кривые.
-- Смотреть и снимать скриншоты строго по `http://localhost`
-  (`python3 scripts/serve.py`), не по `file://`.
-- Данные в разметке — допустимо для статики: это прототип, источник
-  правды — макет. Повторяющиеся блоки размножать кодом агента, не руками.
-- JS — по минимуму: слушатели + классы канона; без фреймворков.
-
-**Ограничения:** нет панели tools, deep-links, реестра дашбордов (это
-react-инфраструктура). Прототип разросся (варианты, стеки состояний,
-свопы) — мигрировать на next по проверенному пути react-patterns.md:
-byte-perfect партиалы через `dangerouslySetInnerHTML`, поведение — хуками.
-Так родился nefor-dash.
-
-**Миграцию не начинать молча.** Если пользователь на static просит панель
-tools (или другую react-фичу), не пересоздавай проект на next по своей
-инициативе — миграция меняет всю сборку. Объясни, что фича требует
-react-стека, и спроси **явное подтверждение**.
-
-## next — Next.js 15 + React
-
-**Когда:** несколько дашбордов со свопами, панель состояний для показов,
-deep-links на каждое состояние, долгоживущий прототип, который будут
-расширять.
-
-**Что даёт шаблон:** панель tools (по явной просьбе), реестр дашбордов,
-deep-links, verify (parity-QA), CI, страховка Vercel-пресета.
-
-### Компоненты core-ds (React)
-
-В next-стеке доступна библиотека дизайн-системы Альфы —
-[core-ds/core-components](https://github.com/core-ds/core-components):
-
-```bash
-npm i @alfalab/core-components        # umbrella-пакет (v50+)
-# или точечно: @alfalab/core-components-button, …-switch, …-input и т.д.
-```
-
-- Витрина и API: https://alfabank.github.io/core-components
-- **Где использовать:** стандартные контролы — кнопки, инпуты, свитчи,
-  селекты, календари, модалки. Это масштабируемее и стабильнее ручной
-  вёрстки: состояния (hover/focus/disabled), a11y и края уже сделаны.
-- **Где НЕ использовать:** уникальные виджеты макета (hero-блоки, табло,
-  ленты операций) — для пиксель-перфекта против конкретного макета
-  кастомный CSS точнее; версия компонента в проде может отличаться от
-  макета дизайнера. Сверяй с design context, отступления — в handoff.
-- Шрифты те же (`install_fonts` / скаффолд); токены из `extract_tokens`
-  дополняют переменные core-ds, не конфликтуя (свои имена).
-
-## Смешанный путь (реальный опыт)
-
-Статика для скорости на старте → миграция на Next.js при росте — путь
-nefor-dash. Не бойся начинать со static: byte-perfect партиалы переезжают
-в React без потери пиксель-перфекта (react-patterns.md).

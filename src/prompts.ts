@@ -30,8 +30,8 @@ export function registerPrompts(server: McpServer) {
 2. get_metadata по фрейму ${nodeId} → список под-узлов; get_design_context ПО КАЖДОМУ крупному под-узлу (лимит ~25k токенов). get_screenshot фрейма — сохранить как эталон.
 3. get_variable_defs → extract_tokens (если токены ещё не выгружены).
 4. За ОДИН проход собери список всех ассетов (иконки svg, картинки png) с node-id и camelCase-именами → ОДИН батч download_assets (Figma MCP) в public/assets/figma → сразу process_assets на папку.
-5. Если проект ещё не создан — СНАЧАЛА спроси пользователя про стек (static или next, критерии в alfa://knowledge/stack-choice) → scaffold_project; иначе register_dashboard (name="${name}").
-6. Вёрстка строго по design context (не по скриншоту), данные — в data/*. Анимации — только add_animation / канон.
+5. Если проект ещё не создан — используй уже выбранный стек; для нового интерактивного прототипа по умолчанию next (alfa://knowledge/stack-choice) → scaffold_project; иначе register_dashboard (name="${name}").
+6. Вёрстка строго по design context (не по скриншоту), данные — в data/*. Анимации — по контракту движения и alfa://knowledge/animation-canon; пресеты add_animation необязательны.
 7. Бленд-дифф с эталоном; npm run verify; get_checklist(stage:"qa") — пройди все пункты.
 Отступления от макета фиксируй в HANDOFF.md.`)
   );
@@ -53,7 +53,7 @@ export function registerPrompts(server: McpServer) {
 1. Прочитай alfa://knowledge/figma-import (грабли под-узлов и инстансов).
 2. get_design_context по узлу ${nodeId} (при обрезке — по под-узлам); get_screenshot узла — эталон.
 3. Ассеты узла: ОДИН батч download_assets (Figma MCP) → сразу process_assets на папку.
-4. Вёрстка в сетке пейна ${pane}; появление виджета — в общий стаггер пейна (не отдельная анимация).
+4. Вёрстка в сетке пейна ${pane}; движение добавляй только согласно исходным данным или согласованному поведению.
 5. Дифф: SVG-экспорт узла + бленд (точечная сверка, pixel-perfect.md).
 6. get_checklist(stage:"layout") перед сдачей.`)
   );
@@ -72,9 +72,9 @@ export function registerPrompts(server: McpServer) {
       p(`Нужна анимация: ${description}${selector ? ` (цель: ${selector})` : ""}.
 
 1. Прочитай alfa://knowledge/animation-canon.
-2. Подбери ближайший рецепт (blur-reveal / stagger / pane-switch / content-dissolve / tab-pill / ticker / spin-ring / magnet / stream-reveal). НЕ изобретай новые кривые.
-3. add_animation с выбранным рецептом и селектором → вставь CSS в styles/app.css, подключи по инструкции из выдачи.
-4. Проверь тайминги getComputedStyle (verification.md), середину — трюком transition-delay:-30s.`)
+2. Получи get_motion_context, если Figma предоставляет движение. Зафиксируй участников, свойства, тайминг, траекторию, clipping, прерывание и reduced motion. Не подменяй авторское движение пресетом.
+3. Реализуй один эталонный переход в существующем движке; add_animation используй только как необязательный стартовый рецепт.
+4. Проверь 0/25/50/75/100% и границы событий управляемыми часами; затем обычное воспроизведение, быстрые клики, resize и reduced motion.`)
   );
 
   server.registerPrompt(
@@ -91,8 +91,8 @@ export function registerPrompts(server: McpServer) {
 
 1. Прочитай alfa://knowledge/verification.
 2. npm run verify (сервер должен быть запущен) — приложи вывод.
-3. Вручную через браузер: программный проклик всех тогглов/табов (dispatchEvent, не «на глаз»), после каждого — assert DOM.
-4. Сэмплируй тайминги ключевых анимаций getComputedStyle — сверь с каноном.
+3. Вручную через браузер: реальные pointer/keyboard действия по всем тогглам/табам, после каждого — assert DOM.
+4. Сверь промежуточные состояния и обычное воспроизведение с контрактом движения; отдельно проверь прерывания и передачу живому DOM.
 5. Проверь deep-links: каждое состояние панели открывается прямой ссылкой.
 6. get_checklist(stage:"qa") — отчёт по каждому пункту с измерениями, не «выглядит ок».`)
   );

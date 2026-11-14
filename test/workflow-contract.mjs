@@ -1,0 +1,11 @@
+import fs from "node:fs";
+import assert from "node:assert/strict";
+const read = p => fs.readFileSync(p, "utf8");
+const motion = read("knowledge/animation-canon.md");
+for (const token of ["get_motion_context","interruption","Reduced motion","real-time"]) assert(motion.includes(token),token);
+assert(!read("src/prompts.ts").includes("НЕ изобретай новые кривые"));
+assert(!read("src/tools/checklist.ts").includes("кривые/тайминги — только"));
+assert(!/pf-hidden|usePageBehavior|dangerouslySetInnerHTML/.test(read("template/components/dashboards/__Dash__.tsx")));
+assert(read("template/components/dashboards/__Dash__.tsx").includes("__DASH_TITLE__"));
+assert(read("knowledge/design-system.md").includes("exact design font"));
+console.log("MCP workflow: source motion, optional recipes, font fidelity and native template passed");

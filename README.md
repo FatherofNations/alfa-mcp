@@ -1,3 +1,5 @@
+> Workflow update: see [current implementation policy](knowledge/index.md) and [migration notes](docs/WORKFLOW.md). Original fonts, native JSX and explicit motion contracts take precedence over historical recipes below. Repository changes require a separate server rollout to affect an existing deployment.
+
 # alfa-mcp
 
 MCP-сервер для скоростной разработки интерактивных прототипов по

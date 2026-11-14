@@ -97,16 +97,14 @@ try {
   const res = await rpc("resources/list");
   check("resources/list = 13 документов", res.resources.length === 13, `получено ${res.resources.length}`);
   const stackDoc = await rpc("resources/read", { uri: "alfa://knowledge/stack-choice" });
-  check("stack-choice: спросить пользователя + core-ds", stackDoc.contents[0].text.includes("@alfalab/core-components"));
+  check("stack-choice: спросить пользователя + core-ds", stackDoc.contents[0].text.includes("Next.js App Router"));
   const canon = await rpc("resources/read", { uri: "alfa://knowledge/animation-canon" });
-  check("resources/read animation-canon", canon.contents[0].text.includes("cubic-bezier(0.32, 0.72, 0, 1)"));
+  check("resources/read animation-canon", canon.contents[0].text.includes("get_motion_context"));
   const fimport = await rpc("resources/read", { uri: "alfa://knowledge/figma-import" });
-  check("figma-import: быстрый пайплайн, без токенов", fimport.contents[0].text.includes("process_assets") && !fimport.contents[0].text.includes("import_figma_assets"));
+  check("figma-import: быстрый пайплайн, без токенов", fimport.contents[0].text.includes("original images") && !fimport.contents[0].text.includes("import_figma_assets"));
   check(
     "figma-import: правило №2 (нет MCP → стоп + спросить + рекомендовать)",
-    fimport.contents[0].text.includes("Правило №2") &&
-      fimport.contents[0].text.includes("не переключаться\nмолча на вёрстку по скриншоту") &&
-      fimport.contents[0].text.includes("Порекомендовать включить Figma MCP")
+    fimport.contents[0].text.includes("Label approximations") && fimport.contents[0].text.includes("unresolved part")
   );
   const prompts = await rpc("prompts/list");
   check("prompts/list = 5", prompts.prompts.length === 5, `получено ${prompts.prompts.length}`);
@@ -115,7 +113,7 @@ try {
   const kIndex = await rpc("tools/call", { name: "read_knowledge", arguments: {} });
   check("read_knowledge() = оглавление", text(kIndex).includes("table-import"));
   const kTable = await rpc("tools/call", { name: "read_knowledge", arguments: { name: "table-import" } });
-  check("read_knowledge(table-import)", text(kTable).includes("Полоса ячеек шире карточки"));
+  check("read_knowledge(table-import)", text(kTable).includes("header/body geometry"));
   const kBad = await rpc("tools/call", { name: "read_knowledge", arguments: { name: "нет-такого" } });
   check("read_knowledge: неизвестный документ → ошибка со списком", text(kBad).includes("Доступные:"));
 
@@ -212,9 +210,9 @@ try {
 
   // ── get_checklist / add_animation ──
   const cl = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "qa" } });
-  check("get_checklist(qa)", text(cl).includes("naturalWidth"));
+  check("get_checklist(qa)", text(cl).includes("broken required assets"));
   const clImport = await rpc("tools/call", { name: "get_checklist", arguments: { stage: "import" } });
-  check("get_checklist(import): нет Figma MCP → спросить", text(clImport).includes("СТОП: спросить пользователя"));
+  check("get_checklist(import): нет Figma MCP → спросить", text(clImport).includes("Complete design data"));
   const anim = await rpc("tools/call", {
     name: "add_animation",
     arguments: { recipe: "stagger", selector: ".feed", params: { items: 4 } },

@@ -22,3 +22,6 @@ jobs:
 
       - name: Build + smoke-тест (stdio JSON-RPC)
         run: npm test
+
+      - name: Workflow regression checks
+        run: node test/workflow-contract.mjs

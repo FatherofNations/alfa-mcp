@@ -1,87 +1,17 @@
-# verification — как проверять результат
+# Three independent verification tracks
+Record commit, route, viewport, DPR, browser, font readiness, assets and state for every result.
+1. Static: source-derived geometry including inner boxes; original assets; exact text; expected font actually loaded; native-size element screenshots; full-frame comparison.
+2. Interaction: real pointer and keyboard actions, both directions, deep links, focus, scroll, disabled states and rapid requests. Synthetic dispatch is a diagnostic, not proof that a user can click through overlays.
+3. Motion: source/contract coverage, deterministic intermediate samples, event boundaries, real-time playback, interruption, resize, slow loading, unmount and reduced motion.
 
-> Скриншот — доказательство, не метод проверки. Сначала измерить DOM,
-> потом снять кадр. В шаблоне есть `npm run verify` (scripts/verify.mjs).
+Inspect what npm run verify actually asserts. Missing Playwright, fixtures, font expectations or motion references means NOT CHECKED, not PASS.
+Run verify with the actual explicit URL. Confirm route identity before trusting results.
+Wait for document.fonts.ready and required image decoding. Check declared families AND font loading; a CSS family string alone does not prove the font rendered.
+Do not globally disable animations for motion QA. For static QA, explicitly seek or set the intended resting state, then measure. animation:none can leave hidden or incorrect states.
+Do not assume headless animations are frozen. Inspect actual currentTime, playState and advancement.
+CSS getComputedStyle timings do not cover arbitrary JS animation engines. Use their timeline APIs, computed output and visual evidence.
+Use the motion contract's sample times plus handoff boundaries; compare against independent reference states, not generated implementation output.
+Record all known defects, missing coverage and accepted deviations. A build pass is only a build pass.
+Run appropriate lint/types/build and existing regression checks. A reusable new checker needs positive and negative cases.
+For local toolkit commands inspect --help for geomdiff, elparity, parity and checklist; do not claim they ran merely because a checklist was printed.
 
-## Чек-лист parity-QA
-
-1. **Все роуты рендерятся** — обойти реестр `lib/dashboards.ts`, каждый
-   роут отдаёт 200 и контент (не пустой `<body>`).
-2. **0 битых картинок** — по каждой `<img>`: `naturalWidth === 0` → битая
-   (браузер молча показывает пустоту, глазами не поймать).
-3. **Консоль чистая** — ни ошибок, ни hydration-варнингов React.
-4. **Интерактив прокликан программно** — `el.dispatchEvent(new MouseEvent
-   ("click", {bubbles: true}))` по каждому тогглу/табу/карточке, после
-   каждого — assert изменившегося DOM. Не «на глаз».
-5. **Тайминги анимаций сэмплированы** — `getComputedStyle` по кадрам:
-
-```js
-// убедиться, что transition реально канонический
-const cs = getComputedStyle(document.querySelector(".pane"));
-console.log(cs.transitionDuration, cs.transitionTimingFunction);
-// середина анимации: снять opacity через 100ms после триггера
-```
-
-## Грабли измерений
-
-- **Фоновые вкладки замораживают rAF и транзишены** — проверять в активной
-  вкладке или headless со скриншот-трюками (см. pixel-perfect).
-- **Клик мимо**: `preview_click`/page.click попадает в элемент с
-  `pointer-events: none` (оверлей-подложка) и молча делает ничего —
-  кликать `dispatchEvent`-ом по конкретному узлу.
-- Скриншот снимать **после** DOM-ассертов: если ассерты прошли, кадр —
-  иллюстрация; если сначала кадр — легко принять желаемое за действительное.
-
-## Порядок сдачи страницы
-
-1. `npm run verify <реальный URL>` — зелёный.
-2. `parity_check` с эталоном Figma — смещений текстовых ранов нет,
-   расхождение только в хинтинге и растровых иллюстрациях.
-3. Прокликаны все состояния панели + deep-links на каждое.
-4. Отступления от макета перечислены в HANDOFF.md.
-
-## Ложные срабатывания: три штуки, каждая стоит цикла отладки
-
-Все три выглядят как баг вёрстки и уводят чинить код, с которым всё в
-порядке.
-
-### 1. Замороженный транзишен читается как смещение вёрстки
-
-`getBoundingClientRect` сразу после загрузки даёт «страницу на 8px ниже
-макета». Это не отступ, а незавершённый канон-ревил (`translateY(10px)`
-→ `none`): в фоновой вкладке и в headless транзишены не тикают, элемент
-остаётся посередине анимации.
-
-Тот же капкан на CSS-переменных: переключил `--zebra` в `transparent`, а
-`getComputedStyle(row, "::before").backgroundColor` показывает старый цвет —
-это застывший `transition: background .15s`, а не неработающее правило.
-
-**Перед замером глушить анимации:**
-
-```js
-const s = document.createElement("style");
-s.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}";
-document.head.appendChild(s);
-void document.body.offsetHeight;   // форсим reflow
-// теперь мерить
-```
-
-Для скриншота наоборот — дать ревилу доиграть: пауза 3–4s после загрузки.
-
-### 2. `next build` поверх живого `next dev`
-
-Общий `.next`: прод-сборка затирает чанки dev-сервера, и он падает с
-`__webpack_modules__[moduleId] is not a function`. Скриншот при этом
-выходит с оверлеем ошибки Next вместо страницы — легко принять за
-«вёрстка развалилась».
-
-Лечится `rm -rf .next` + рестарт dev. Лучше просто не собирать при живом dev.
-
-### 3. `npm run verify` без аргумента бьёт в `:3000`
-
-Если порт занят ЧУЖИМ проектом (а он занят часто), verify отрапортует
-зелёным про чужое приложение. Признак подмены: число проверенных ассетов
-и вес страницы не похожи на твой проект.
-
-Всегда передавать реальный URL — скаффолд поднимается с `autoPort`, порт
-печатается при старте.
